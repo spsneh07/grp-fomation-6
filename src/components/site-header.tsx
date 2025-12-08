@@ -7,16 +7,21 @@ export function SiteHeader() {
     <header className="absolute top-0 left-0 right-0 z-50 bg-transparent">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
         <Link href="/">
-          <Logo className="text-primary-foreground" />
+          <Logo />
         </Link>
-        <nav className="flex items-center gap-4">
-          <Button variant="ghost" asChild className="text-primary-foreground hover:bg-white/20 hover:text-primary-foreground">
+        <nav className="hidden md:flex items-center gap-6">
+            <Link href="#features" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Features</Link>
+            <Link href="#how-it-works" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">How it works</Link>
+            <Link href="#testimonials" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Testimonials</Link>
+        </nav>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" asChild>
             <Link href="/login">Login</Link>
           </Button>
-          <Button variant="secondary" asChild>
-            <Link href="/signup">Create Profile</Link>
+          <Button asChild>
+            <Link href="/signup">Sign Up</Link>
           </Button>
-        </nav>
+        </div>
       </div>
     </header>
   );
