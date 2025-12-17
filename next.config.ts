@@ -1,6 +1,9 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // ✅ Disable Strict Mode to stop double-fetching API calls
+  reactStrictMode: false,
+
   /* config options here */
   typescript: {
     ignoreBuildErrors: true,

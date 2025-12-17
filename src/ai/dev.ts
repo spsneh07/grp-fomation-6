@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/ai-project-matching.ts';
-import '@/ai/flows/ai-candidate-recommendation.ts';
-import '@/ai/flows/learner-assignment.ts';
+// ✅ Remove '.ts' from the end of these imports
+import '@/ai/flows/ai-project-matching';
+import '@/ai/flows/ai-candidate-recommendation';
+import '@/ai/flows/learner-assignment';

@@ -1,40 +1,84 @@
-import { mockProjects, mockUsers, demoUser } from '@/lib/data';
+"use client";
+
+import { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Book, Users, MessageSquare, Award, ClipboardList } from 'lucide-react';
+import { Send, Book, Users, MessageSquare, ClipboardList, Loader2, Award } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
-export default function CollaboratePage({ params }: { params: { id: string } }) {
-  const project = mockProjects.find(p => p.id === params.id) || mockProjects[0];
-  const teamMembers = mockUsers.filter(u => project.team.some(t => t.userId === u.id));
-  const otherMembers = teamMembers.filter(m => m.id !== demoUser.id);
+export default function CollaboratePage() {
+  const params = useParams(); // Get ID from URL
+  const [project, setProject] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // 1. Fetch Project & User Data
+  useEffect(() => {
+    // Get current user from local storage
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+
+ const fetchProject = async () => {
+      if (!params?.id) return; // 🛑 STOP if no ID exists yet
+
+      try {
+        const res = await fetch(`/api/projects/${params.id}`);
+        
+        // ✅ Check if the response is actually JSON before parsing
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+           throw new Error("Received HTML instead of JSON (Likely 404)");
+        }
+
+        const data = await res.json();
+        if (data.project) {
+            setProject(data.project);
+        }
+      } catch (error) {
+        console.error("Error fetching project:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+fetchProject();
+  }, [params.id]);
   
-  const requirements = [
-    { title: "Problem Statement", content: "Users need a way to find and form teams for projects efficiently, balancing skills and learning goals." },
-    { title: "Goals", content: "1. Create an AI-driven matching system. 2. Foster collaboration with an in-app workspace. 3. Ensure a balanced ecosystem of creators and joiners." },
-    { title: "Tech Stack", content: "Next.js, Tailwind CSS, Firebase (Auth, Firestore), Genkit AI." },
-    { title: "Deliverables", content: "A full-stack web application with the 4 core modules: Landing Page, User Dashboard, Project Dashboard, and Collaboration Space." },
-    { title: "Timeline", content: "Phase 1 (UI/UX & Core Structure): 1 week. Phase 2 (Backend & AI Integration): 2 weeks. Phase 3 (Testing & Deployment): 1 week." }
-  ];
+  if (loading) return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (!project) return <div className="p-10 text-center">Project not found</div>;
+
+  // 2. Prepare Team Data
+  // In a real app, you would have a 'team' array in DB. 
+  // For now, we display the Owner as the first team member.
+  const teamList = project.team && project.team.length > 0 
+    ? project.team 
+    : [{ user: project.owner, role: 'Owner' }]; // Fallback if team array is empty
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-6">
       <div>
         <h1 className="font-headline text-3xl font-bold">Collaboration: {project.title}</h1>
         <p className="text-muted-foreground">Your team's dedicated workspace.</p>
       </div>
       
       <div className="grid gap-8 lg:grid-cols-3">
+        
+        {/* LEFT COLUMN: Chat & Board */}
         <div className="lg:col-span-2">
            <Tabs defaultValue="chat" className="w-full">
             <TabsList>
                 <TabsTrigger value="chat"><MessageSquare className="w-4 h-4 mr-2"/>Team Chat</TabsTrigger>
                 <TabsTrigger value="board"><ClipboardList className="w-4 h-4 mr-2"/>Project Board</TabsTrigger>
             </TabsList>
+            
+            {/* Chat Tab */}
             <TabsContent value="chat">
                  <Card className="h-[600px] flex flex-col">
                     <CardHeader>
@@ -43,27 +87,33 @@ export default function CollaboratePage({ params }: { params: { id: string } }) 
                     <CardContent className="flex-grow overflow-hidden">
                         <ScrollArea className="h-full pr-4">
                             <div className="space-y-4">
-                                {otherMembers.map(member => (
-                                    <div key={member.id} className="flex items-start gap-3">
-                                        <Avatar className="h-8 w-8">
-                                            <AvatarImage src={member.avatarUrl} />
-                                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="rounded-lg bg-muted p-3 max-w-[75%]">
-                                            <p className="text-sm font-semibold">{member.name}</p>
-                                            <p className="text-sm">Welcome to the team! Excited to get started.</p>
-                                        </div>
-                                    </div>
-                                ))}
-                                <div className="flex items-start gap-3 justify-end">
-                                    <div className="rounded-lg bg-primary text-primary-foreground p-3 max-w-[75%]">
-                                        <p className="text-sm">Great to have you all! Let's build something amazing.</p>
-                                    </div>
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarImage src={demoUser.avatarUrl} />
-                                        <AvatarFallback>{demoUser.name.charAt(0)}</AvatarFallback>
-                                    </Avatar>
+                                {/* Simulated Welcome Message */}
+                                <div className="flex items-start gap-3 justify-center my-4">
+                                    <Badge variant="outline" className="text-muted-foreground">
+                                        Today
+                                    </Badge>
                                 </div>
+                                
+                                <div className="flex items-start gap-3">
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarFallback>AI</AvatarFallback>
+                                    </Avatar>
+                                    <div className="rounded-lg bg-muted p-3 max-w-[75%]">
+                                        <p className="text-sm font-semibold">SynergyHub Bot</p>
+                                        <p className="text-sm">Welcome to the workspace for <strong>{project.title}</strong>! Connect with your team here.</p>
+                                    </div>
+                                </div>
+
+                                {currentUser && (
+                                     <div className="flex items-start gap-3 justify-end">
+                                     <div className="rounded-lg bg-primary text-primary-foreground p-3 max-w-[75%]">
+                                             <p className="text-sm">I've joined the workspace! Ready to work.</p>
+                                     </div>
+                                     <Avatar className="h-8 w-8">
+                                         <AvatarFallback>{currentUser.name?.charAt(0)}</AvatarFallback>
+                                     </Avatar>
+                                 </div>
+                                )}
                             </div>
                         </ScrollArea>
                     </CardContent>
@@ -75,6 +125,8 @@ export default function CollaboratePage({ params }: { params: { id: string } }) 
                     </CardFooter>
                 </Card>
             </TabsContent>
+            
+            {/* Board Tab */}
             <TabsContent value="board">
                  <Card>
                     <CardHeader>
@@ -82,38 +134,54 @@ export default function CollaboratePage({ params }: { params: { id: string } }) 
                         <CardDescription>An editable board for your team to align on project goals.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                       {requirements.map(req => (
-                           <div key={req.title}>
-                                <h3 className="font-semibold">{req.title}</h3>
-                                <p className="text-sm text-muted-foreground p-3 bg-muted rounded-md mt-1">{req.content}</p>
-                           </div>
-                       ))}
+                       <div className="space-y-4">
+                            <div>
+                                <h3 className="font-semibold">Project Description</h3>
+                                <p className="text-sm text-muted-foreground p-3 bg-muted rounded-md mt-1">{project.description}</p>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold">Tech Stack</h3>
+                                <div className="flex gap-2 mt-2">
+                                    {project.techStack.map((tech: string, i: number) => (
+                                        <Badge key={i} variant="secondary">{tech}</Badge>
+                                    ))}
+                                </div>
+                            </div>
+                            {project.githubLink && (
+                                <div>
+                                    <h3 className="font-semibold">Repository</h3>
+                                    <a href={project.githubLink} target="_blank" className="text-sm text-blue-500 hover:underline">{project.githubLink}</a>
+                                </div>
+                            )}
+                       </div>
                     </CardContent>
                 </Card>
             </TabsContent>
            </Tabs>
         </div>
+
+        {/* RIGHT COLUMN: Team Members */}
         <div className="space-y-8">
             <Card>
                 <CardHeader>
                     <CardTitle className="font-headline flex items-center gap-2"><Users className="w-5 h-5"/> Team Members</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {teamMembers.map(member => {
-                        const teamInfo = project.team.find(t => t.userId === member.id);
+                    {teamList.map((member: any, index: number) => {
+                        const userData = member.user || member; // Handle population structure
                         return (
-                            <div key={member.id} className="flex items-center gap-4 p-2 rounded-lg hover:bg-muted">
+                            <div key={index} className="flex items-center gap-4 p-2 rounded-lg hover:bg-muted transition-colors">
                                 <Avatar>
-                                    <AvatarImage src={member.avatarUrl} />
-                                    <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name}`} />
+                                    <AvatarFallback>{userData.name?.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-grow">
-                                    <p className="font-semibold">{member.name}</p>
-                                    <p className="text-sm text-muted-foreground">{teamInfo?.role}</p>
+                                    <p className="font-semibold">{userData.name}</p>
+                                    <p className="text-sm text-muted-foreground">{userData.email}</p>
                                 </div>
-                                {teamInfo?.isLearner ? 
-                                    <Badge variant="secondary"><Book className="mr-1 h-3 w-3"/>Learner</Badge> : 
-                                    <Badge variant="default"><Award className="mr-1 h-3 w-3"/>Expert</Badge>
+                                {index === 0 ? 
+                                    <Badge variant="default">Owner</Badge> : 
+                                    <Badge variant="secondary">Member</Badge>
                                 }
                             </div>
                         )
