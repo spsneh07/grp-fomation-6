@@ -85,12 +85,15 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <Link href="#" className="ml-auto inline-block text-sm underline">
-                  Forgot password?
-                </Link>
-              </div>
+<div className="flex items-center justify-between">
+  <label className="text-sm">Password</label>
+  <Link 
+    href="/forgot-password" 
+    className="text-sm text-primary hover:underline"
+  >
+    Forgot password?
+  </Link>
+</div>
               <Input 
                 id="password" 
                 type="password" 
