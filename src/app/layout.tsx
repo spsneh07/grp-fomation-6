@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
-import { Toaster } from 'sonner'; // ✅ Using Sonner instead of default toaster
+import { Toaster } from 'sonner';
 import './globals.css';
 import { cn } from '@/lib/utils';
+// ✅ CHANGE 1: Import the new wrapper instead of the direct provider
+import AuthProvider from "@/components/AuthProvider";
 
 export const metadata: Metadata = {
   title: 'SynergyHub AI',
@@ -21,9 +23,11 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('font-body antialiased')}>
-        {children}
+        {/* ✅ CHANGE 2: Wrap children with AuthProvider */}
+        <AuthProvider>
+            {children}
+        </AuthProvider>
         
-        {/* ✅ Sonner Toaster: Handles the popup notifications */}
         <Toaster richColors position="top-right" />
       </body>
     </html>

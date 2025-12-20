@@ -7,14 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Logo } from '@/components/logo';
+import { Logo } from '@/components/logo'; // Assuming this path is correct
 import { Loader2 } from "lucide-react";
-// ✅ FIX 1: Import 'toast' directly from Sonner
 import { toast } from "sonner"; 
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 
 export default function LoginPage() {
   const router = useRouter();
-  // ❌ REMOVED: const { toast } = useToast(); (Not needed for Sonner)
   
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -36,19 +35,38 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
+        // 1. Store user info (useful for client context)
         localStorage.setItem("user", JSON.stringify(data.user));
         
-        // ✅ FIX 2: Use Sonner syntax (Green)
-        toast.success("Login successful!", {
-            description: "Welcome back to SynergyHub."
-        });
-        
-        router.push("/dashboard"); 
+        // 2. ✅ CONDITIONAL REDIRECT LOGIC
+        if (data.user.hasCompletedOnboarding === false) {
+            toast.message("Welcome!", {
+                description: "Let's set up your profile first."
+            });
+            router.push("/onboarding"); // Redirect New Users here
+        } else {
+            toast.success("Login successful!", {
+                description: "Welcome back to SynergyHub."
+            });
+            router.push("/dashboard"); // Redirect Existing Users here
+        }
+
       } else {
-        // ✅ FIX 3: Use Sonner syntax (Red)
-        toast.error("Login Failed", {
-            description: data.error || "Invalid email or password"
-        });
+        // ✅ Existing Logic: Handle invalid credentials or non-existent accounts
+        if (res.status === 404 || data.error?.toLowerCase().includes("not found")) {
+            toast.error("Account not found", {
+                description: "We couldn't find an account with that email.",
+                action: {
+                    label: "Create Account",
+                    onClick: () => router.push("/signup")
+                },
+                duration: 5000,
+            });
+        } else {
+            toast.error("Login Failed", {
+                description: data.error || "Invalid email or password"
+            });
+        }
       }
     } catch (error) {
       console.error("Login Error:", error);
@@ -85,15 +103,15 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-<div className="flex items-center justify-between">
-  <label className="text-sm">Password</label>
-  <Link 
-    href="/forgot-password" 
-    className="text-sm text-primary hover:underline"
-  >
-    Forgot password?
-  </Link>
-</div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link 
+                    href="/forgot-password" 
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
               <Input 
                 id="password" 
                 type="password" 
@@ -115,9 +133,20 @@ export default function LoginPage() {
               )}
             </Button>
             
+            <div className="relative w-full">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                </div>
+            </div>
+
+            <GoogleLoginButton />
+
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="underline">
+              <Link href="/signup" className="underline font-semibold text-primary hover:text-primary/80">
                 Sign up
               </Link>
             </div>

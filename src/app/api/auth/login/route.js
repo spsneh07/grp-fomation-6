@@ -1,50 +1,63 @@
-import connectDB from "@/lib/db";
-import User from "@/models/User";
+// app/api/auth/login/route.js
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs"; 
+import User from "@/models/User";
+import connectDB from "@/lib/db";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken"; // Import JWT
 
 export async function POST(req) {
   try {
     await connectDB();
     const { email, password } = await req.json();
 
-    // ✅ FIX: Explicitly select the password field
-    // Some schemas hide the password by default ({ select: false })
-    const user = await User.findOne({ email }).select("+password");
-
+    // 1. Find User
+    const user = await User.findOne({ email });
     if (!user) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 400 });
     }
 
-    // Debug Log (Optional: Remove after fixing)
-    console.log("🔍 Checking User:", user.email);
-    console.log("🔑 Hash from DB:", user.password ? "Found" : "MISSING!");
-
-    if (!user.password) {
-        return NextResponse.json({ error: "User data corrupted (No password set)" }, { status: 500 });
-    }
-
-    // Compare
+    // 2. Check Password
     const isMatch = await bcrypt.compare(password, user.password);
-    
     if (!isMatch) {
-      console.log("❌ Password Mismatch");
       return NextResponse.json({ error: "Invalid credentials" }, { status: 400 });
     }
 
-    console.log("✅ Login Success");
+    // 3. Create Token Payload
+    const tokenData = {
+      id: user._id,
+      email: user.email,
+    };
 
-    // Return user without the password
-    const userResponse = user.toObject(); 
-    delete userResponse.password;
+    // 4. Generate JWT Token
+    // Make sure TOKEN_SECRET is in your .env file
+    const token = jwt.sign(tokenData, process.env.TOKEN_SECRET, {
+      expiresIn: "1d",
+    });
 
-    return NextResponse.json({ 
-      message: "Login successful", 
-      user: userResponse 
-    }, { status: 200 });
+    // 5. Create the Response
+    const response = NextResponse.json({
+      message: "Login successful",
+      success: true,
+      user: {
+        id: user._id,
+        email: user.email,
+        hasCompletedOnboarding: user.hasCompletedOnboarding, // ✅ The Flag for Redirect
+      },
+    });
+
+    // 6. Set the Token as an HTTP-Only Cookie
+    response.cookies.set("token", token, {
+      httpOnly: true, // Prevents JavaScript access (XSS protection)
+      secure: process.env.NODE_ENV === "production", // Only send over HTTPS in production
+      sameSite: "strict",
+      path: "/",
+      maxAge: 60 * 60 * 24, // 1 day
+    });
+
+    return response;
 
   } catch (error) {
     console.error("Login Error:", error);
-    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

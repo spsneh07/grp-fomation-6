@@ -12,7 +12,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { X, PlusCircle, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
-import { toast } from "sonner"; // ✅ Correct import
+import { toast } from "sonner";
+// ✅ NEW IMPORT
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -57,7 +59,6 @@ export default function SignupPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // ✅ Success Toast
         toast.success("Account Created! 🎉", {
           description: "Redirecting to login...",
           action: {
@@ -66,20 +67,17 @@ export default function SignupPage() {
           },
         });
 
-        // Small delay so user can read the toast before redirecting
         setTimeout(() => {
           router.push("/login");
         }, 1500);
         
       } else {
-        // ✅ Fixed Error Toast Syntax
         toast.error("Signup Failed", {
           description: data.error || "Please try again."
         });
       }
     } catch (error) {
       console.error("Signup Error:", error);
-      // ✅ Fixed Catch Block to use Sonner
       toast.error("Connection Error", {
         description: "Something went wrong. Please check your connection."
       });
@@ -204,6 +202,19 @@ export default function SignupPage() {
                 "Create Account & Go to Dashboard"
               )}
             </Button>
+
+            {/* ✅ ADDED: Divider and Google Button */}
+            <div className="relative w-full">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                </div>
+            </div>
+
+            <GoogleLoginButton />
+
             <div className="mt-4 text-center text-sm">
               Already have an account?{' '}
               <Link href="/login" className="underline">
