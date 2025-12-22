@@ -50,43 +50,54 @@ h6 {
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    /* Deep Saturated Charcoal/Slate Base - Deep Space */
+    --background: 240 10% 4%;
+    /* #09090b */
+    --foreground: 210 40% 98%;
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    /* Sophisticated Glass - Luminous */
+    --card: 240 10% 5%;
+    /* Slightly lighter than bg */
+    --card-foreground: 210 40% 98%;
+    /* Popover Glass */
+    --popover: 240 10% 4%;
+    --popover-foreground: 210 40% 98%;
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    /* Electric Indigo/Violet Accent */
+    --primary: 263 70% 50%;
+    /* #7c3aed */
+    --primary-foreground: 210 40% 98%;
 
-    /* Vibrant Neon Violet */
-    --primary: 263 90% 70%;
-    --primary-foreground: 0 0% 0%;
+    --secondary: 215 15% 15%;
+    /* Muted Slate */
+    --secondary-foreground: 210 40% 98%;
 
-    --secondary: 240 4% 16%;
-    --secondary-foreground: 0 0% 98%;
+    --muted: 215 15% 15%;
+    --muted-foreground: 215 20% 65%;
 
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 64.9%;
-
-    --accent: 240 4% 16%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 263 70% 50%;
+    /* Reuse primary for accents */
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 240 4% 16%;
-    --input: 240 4% 16%;
-    --ring: 263 90% 70%;
+    /* Glowing Borders */
+    --border: 240 5.9% 15%;
+    /* Subtle/Darker */
+    --input: 240 5.9% 15%;
+    --ring: 263 70% 50%;
 
-    --sidebar-background: 240 10% 3.9%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 263 90% 70%;
+    /* Glass Sidebar */
+    --sidebar-background: 240 10% 4%;
+    --sidebar-foreground: 240 4.8% 80%;
+    --sidebar-primary: 263 70% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 263 90% 70%;
+    --sidebar-accent: 240 5.9% 10%;
+    /* Subtle highlight */
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 5.9% 10%;
+    --sidebar-ring: 263 70% 50%;
   }
 }
 

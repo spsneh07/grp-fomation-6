@@ -10,10 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { X, PlusCircle, Loader2, Sparkles, User, Mail, Lock, Briefcase } from 'lucide-react';
+import { X, PlusCircle, Loader2, Sparkles, User, Mail, Lock, Briefcase, ArrowRight } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { toast } from "sonner";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
+import { motion } from "framer-motion";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -86,160 +87,174 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/50 to-background p-4 py-12 relative overflow-hidden">
-      {/* Ambient Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 blur-[100px] rounded-full opacity-40 pointer-events-none" />
+    <div className="flex min-h-screen items-center justify-center p-4 py-12 relative overflow-hidden bg-background">
+      {/* Luminous Background */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[10%] right-[10%] w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-[10%] left-[10%] w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px]" />
+      </div>
 
-      <Card className="w-full max-w-2xl shadow-2xl border-border/50 bg-card/50 backdrop-blur-xl relative z-10 animate-in fade-in zoom-in-95 duration-500">
-        <CardHeader className="text-center space-y-2">
-          <div className="flex justify-center mb-2">
-            <Logo />
-          </div>
-          <CardTitle className="font-headline text-3xl font-bold tracking-tight">Create Your Account</CardTitle>
-          <CardDescription className="text-base">Join the SynergyHub community today.</CardDescription>
-        </CardHeader>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-2xl relative z-10"
+      >
+        <Card className="shadow-2xl border-white/10 bg-black/40 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-500 overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
 
-        <form onSubmit={handleSignup}>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="name"
-                    placeholder="Alex Doe"
-                    required
-                    className="pl-9 bg-background/50 border-border/50 focus:border-primary/50"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  />
-                </div>
+          <CardHeader className="text-center space-y-2 pt-8">
+            <div className="flex justify-center mb-4">
+              <div className="p-3 rounded-2xl bg-white/5 border border-white/10 shadow-lg shadow-primary/10">
+                <Logo />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    required
-                    className="pl-9 bg-background/50 border-border/50 focus:border-primary/50"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    className="pl-9 bg-background/50 border-border/50 focus:border-primary/50"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="experience">Experience Level</Label>
-                <Select onValueChange={(value) => setFormData({ ...formData, experienceLevel: value })}>
-                  <SelectTrigger className="bg-background/50 border-border/50 focus:border-primary/50">
-                    <SelectValue placeholder="Select level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Beginner">Beginner (0-2 years)</SelectItem>
-                    <SelectItem value="Intermediate">Intermediate (2-5 years)</SelectItem>
-                    <SelectItem value="Advanced">Advanced (5+ years)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
             </div>
+            <CardTitle className="font-headline text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">Create Your Account</CardTitle>
+            <CardDescription className="text-lg font-light text-muted-foreground">Join the SynergyHub community today.</CardDescription>
+          </CardHeader>
 
-            <div className="space-y-2">
-              <Label htmlFor="bio">Your Bio</Label>
-              <Textarea
-                id="bio"
-                placeholder="Tell us a bit about yourself... (e.g. Full-stack developer passionate about AI)"
-                className="min-h-[80px] bg-background/50 border-border/50 focus:border-primary/50 resize-y"
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              />
-            </div>
+          <form onSubmit={handleSignup}>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            <div className="space-y-3">
-              <Label>Your Skills</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="e.g., React, Figma (Press Enter to add)"
-                  value={currentSkill}
-                  onChange={(e) => setCurrentSkill(e.target.value)}
-                  className="bg-background/50 border-border/50 focus:border-primary/50"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      addSkill();
-                    }
-                  }}
+                <div className="space-y-2 group">
+                  <Label htmlFor="name" className="ml-1 text-xs uppercase tracking-wider text-muted-foreground font-semibold">Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Input
+                      id="name"
+                      placeholder="Alex Doe"
+                      required
+                      className="pl-10 h-11 border-white/10 bg-white/5 focus:border-primary/50 focus:ring-primary/20 transition-all rounded-lg"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 group">
+                  <Label htmlFor="email" className="ml-1 text-xs uppercase tracking-wider text-muted-foreground font-semibold">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      required
+                      className="pl-10 h-11 border-white/10 bg-white/5 focus:border-primary/50 focus:ring-primary/20 transition-all rounded-lg"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 group">
+                  <Label htmlFor="password" className="ml-1 text-xs uppercase tracking-wider text-muted-foreground font-semibold">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Input
+                      id="password"
+                      type="password"
+                      required
+                      className="pl-10 h-11 border-white/10 bg-white/5 focus:border-primary/50 focus:ring-primary/20 transition-all rounded-lg"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 group">
+                  <Label htmlFor="experience" className="ml-1 text-xs uppercase tracking-wider text-muted-foreground font-semibold">Experience Level</Label>
+                  <Select onValueChange={(value) => setFormData({ ...formData, experienceLevel: value })}>
+                    <SelectTrigger className="h-11 border-white/10 bg-white/5 focus:border-primary/50 focus:ring-primary/20 transition-all rounded-lg">
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-black/90 border-white/10 backdrop-blur-xl">
+                      <SelectItem value="Beginner">Beginner (0-2 years)</SelectItem>
+                      <SelectItem value="Intermediate">Intermediate (2-5 years)</SelectItem>
+                      <SelectItem value="Advanced">Advanced (5+ years)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+              </div>
+
+              <div className="space-y-2 group">
+                <Label htmlFor="bio" className="ml-1 text-xs uppercase tracking-wider text-muted-foreground font-semibold">Your Bio</Label>
+                <Textarea
+                  id="bio"
+                  placeholder="Tell us a bit about yourself... (e.g. Full-stack developer passionate about AI)"
+                  className="min-h-[100px] border-white/10 bg-white/5 focus:border-primary/50 focus:ring-primary/20 transition-all rounded-lg resize-y"
+                  value={formData.bio}
+                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                 />
-                <Button type="button" onClick={addSkill} variant="outline" size="icon" className="shrink-0 border-border/50">
-                  <PlusCircle className="h-4 w-4" />
-                </Button>
               </div>
-              <div className="flex flex-wrap gap-2 min-h-[38px] p-2 rounded-lg bg-muted/20 border border-dashed border-border/40">
-                {skills.length === 0 && <span className="text-sm text-muted-foreground w-full text-center py-1">Type a skill and press Enter</span>}
-                {skills.map(skill => (
-                  <Badge key={skill.name} variant="secondary" className="flex items-center gap-1.5 text-sm py-1 bg-secondary/80 hover:bg-secondary">
-                    {skill.name}
-                    <button type="button" onClick={() => removeSkill(skill.name)} className="opacity-50 hover:opacity-100 transition-opacity">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
+
+              <div className="space-y-3">
+                <Label className="ml-1 text-xs uppercase tracking-wider text-muted-foreground font-semibold">Your Skills</Label>
+                <div className="flex gap-3">
+                  <Input
+                    placeholder="e.g., React, Figma (Press Enter to add)"
+                    value={currentSkill}
+                    onChange={(e) => setCurrentSkill(e.target.value)}
+                    className="h-11 border-white/10 bg-white/5 focus:border-primary/50 focus:ring-primary/20 transition-all rounded-lg"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addSkill();
+                      }
+                    }}
+                  />
+                  <Button type="button" onClick={addSkill} variant="outline" size="icon" className="shrink-0 h-11 w-11 border-white/10 bg-white/5 hover:bg-white/10 hover:text-primary transition-colors">
+                    <PlusCircle className="h-5 w-5" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 min-h-[44px] p-3 rounded-xl bg-black/20 border border-dashed border-white/10">
+                  {skills.length === 0 && <span className="text-sm text-muted-foreground w-full text-center py-1 opacity-50">Type a skill and press Enter</span>}
+                  {skills.map(skill => (
+                    <Badge key={skill.name} variant="secondary" className="pl-3 pr-1.5 py-1.5 h-8 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors flex items-center gap-2 text-sm">
+                      {skill.name}
+                      <button type="button" onClick={() => removeSkill(skill.name)} className="h-5 w-5 rounded-full flex items-center justify-center hover:bg-black/20 transition-colors">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
 
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4 pb-8">
-            <Button className="w-full h-11 text-base font-medium shadow-lg shadow-primary/20 hover:scale-[1.01] transition-transform" type="submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Creating Account...
-                </>
-              ) : (
-                <>Create Account <Sparkles className="ml-2 h-4 w-4" /></>
-              )}
-            </Button>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-6 pt-4 pb-8">
+              <Button className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90 shadow-[0_0_20px_-5px_var(--primary)] transition-all hover:scale-[1.02] group" type="submit" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Creating Account...
+                  </>
+                ) : (
+                  <>Create Account <Sparkles className="ml-2 h-4 w-4 group-hover:rotate-12 transition-transform" /></>
+                )}
+              </Button>
 
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border/50" />
+              <div className="relative w-full">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-white/10" />
+                </div>
+                <div className="relative flex justify-center text-[10px] uppercase tracking-widest">
+                  <span className="bg-black/40 px-3 text-muted-foreground rounded-full backdrop-blur-xl">Or continue with</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase tracking-wider">
-                <span className="bg-background px-2 text-muted-foreground font-medium">Or continue with</span>
+
+              <GoogleLoginButton />
+
+              <div className="mt-4 text-center text-sm text-muted-foreground/60">
+                Already have an account?{' '}
+                <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors hover:underline">
+                  Login
+                </Link>
               </div>
-            </div>
-
-            <GoogleLoginButton />
-
-            <div className="mt-4 text-center text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <Link href="/login" className="underline font-semibold text-primary hover:text-primary/80 transition-colors">
-                Login
-              </Link>
-            </div>
-          </CardFooter>
-        </form>
-      </Card>
+            </CardFooter>
+          </form>
+        </Card>
+      </motion.div>
     </div>
   );
 }

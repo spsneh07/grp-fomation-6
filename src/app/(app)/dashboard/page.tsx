@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Line, LineChart, ResponsiveContainer, Tooltip } from "recharts";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -32,6 +34,50 @@ const NoMatchSuggestions = () => {
         </div>
     );
 }
+
+// Mock Data for Sparklines
+const dataSmall = [
+    { value: 10 }, { value: 25 }, { value: 15 }, { value: 30 }, { value: 45 }, { value: 35 }, { value: 60 }
+];
+
+const MetricCard = ({ title, value, subtext, icon: Icon, color, delay }: any) => (
+    <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay }}
+        whileHover={{ y: -5, boxShadow: `0 10px 30px -10px ${color}40` }}
+        className="relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-white/5 bg-white/60 dark:bg-white/5 p-6 backdrop-blur-xl transition-all shadow-sm dark:shadow-none"
+    >
+        <div className={`absolute top-0 right-0 p-4 opacity-10 dark:opacity-20`} style={{ color }}>
+            <Icon className="h-16 w-16 -mr-4 -mt-4 rotate-12" />
+        </div>
+
+        <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+                <div className={`p-2 rounded-lg bg-slate-100 dark:bg-white/5`} style={{ color }}>
+                    <Icon className="h-5 w-5" />
+                </div>
+                <span className="text-sm font-medium text-muted-foreground">{title}</span>
+            </div>
+            <div className="flex items-end justify-between gap-4">
+                <div>
+                    <h3 className="font-headline text-3xl font-bold tracking-tight">{value}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">{subtext}</p>
+                </div>
+                <div className="h-10 w-24 opacity-50">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={dataSmall}>
+                            <Line type="monotone" dataKey="value" stroke={color} strokeWidth={2} dot={false} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+        </div>
+
+        {/* Glow Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/40 dark:to-white/5 pointer-events-none" />
+    </motion.div>
+);
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -182,85 +228,88 @@ export default function DashboardPage() {
         }
     };
 
-    if (loading) return <div className="flex h-screen items-center justify-center gap-2 text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin text-primary" /> <span className="text-lg font-medium">Loading Dashboard...</span></div>;
+    if (loading) return (
+        <div className="flex h-screen items-center justify-center gap-2 text-muted-foreground">
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                <Loader2 className="h-6 w-6 text-primary" />
+            </motion.div>
+            <span className="text-lg font-medium">Loading Dashboard...</span>
+        </div>
+    );
 
     return (
-        <div className="space-y-8 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+        <div className="space-y-8 pb-10">
             {/* HEADER */}
-            <div className="flex items-center justify-between">
+            <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center justify-between"
+            >
                 <div>
-                    <h1 className="font-headline text-3xl font-bold tracking-tight">Overview</h1>
-                    <p className="text-muted-foreground mt-1">Welcome back, {user.name?.split(' ')[0] || 'User'}. Here's what's happening.</p>
+                    <h1 className="font-headline text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-white/60">Overview</h1>
+                    <p className="text-muted-foreground mt-1 text-lg">Welcome back, {user.name?.split(' ')[0] || 'User'}. Here's what's happening.</p>
                 </div>
-                <Button asChild className="hidden sm:flex">
-                    <Link href="/projects/new">Post New Project</Link>
+                <Button asChild className="hidden sm:flex h-11 px-6 bg-primary hover:bg-primary/90 shadow-[0_0_20px_-5px_var(--primary)] transition-all hover:scale-105">
+                    <Link href="/projects/new"><Sparkles className="mr-2 h-4 w-4" /> Post New Project</Link>
                 </Button>
+            </motion.div>
+
+            {/* HERO METRICS GRID */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <MetricCard
+                    title="Total Matches"
+                    value={projects.length}
+                    subtext="AI-recommended projects"
+                    icon={BrainCircuit}
+                    color="#8b5cf6"
+                    delay={0.1}
+                />
+                <MetricCard
+                    title="Pending Requests"
+                    value={myRequests.filter(r => r.status === 'pending').length}
+                    subtext="Applications sent by you"
+                    icon={Clock}
+                    color="#eab308"
+                    delay={0.2}
+                />
+                <MetricCard
+                    title="Inbox"
+                    value={incomingRequests.length}
+                    subtext="Incoming applications"
+                    icon={Inbox}
+                    color="#3b82f6"
+                    delay={0.3}
+                />
+                <MetricCard
+                    title="Active Projects"
+                    value="0"
+                    subtext="Projects managed by you"
+                    icon={Layout}
+                    color="#22c55e"
+                    delay={0.4}
+                />
             </div>
 
-            {/* METRICS GRID */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-colors">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Matches</CardTitle>
-                        <BrainCircuit className="h-4 w-4 text-primary" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{projects.length}</div>
-                        <p className="text-xs text-muted-foreground">AI-recommended projects</p>
-                    </CardContent>
-                </Card>
-                <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-colors">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
-                        <Clock className="h-4 w-4 text-yellow-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{myRequests.filter(r => r.status === 'pending').length}</div>
-                        <p className="text-xs text-muted-foreground">Applications sent by you</p>
-                    </CardContent>
-                </Card>
-                <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-colors">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Inbox</CardTitle>
-                        <Inbox className="h-4 w-4 text-blue-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{incomingRequests.length}</div>
-                        <p className="text-xs text-muted-foreground">Incoming applications</p>
-                    </CardContent>
-                </Card>
-                <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-colors">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-                        <Layout className="h-4 w-4 text-green-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">0</div>
-                        <p className="text-xs text-muted-foreground">Projects managed by you</p>
-                    </CardContent>
-                </Card>
-            </div>
+            <Tabs defaultValue="projects" className="space-y-8">
 
-            <Tabs defaultValue="projects" className="space-y-6">
-
-                {/* TAB LIST + SEARCH BAR LAYOUT */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/40 pb-4">
-                    <TabsList className="bg-muted/50 p-1">
-                        <TabsTrigger value="projects" className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"><BrainCircuit className="h-4 w-4" /> Recommended</TabsTrigger>
-                        <TabsTrigger value="requests" className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"><Send className="h-4 w-4" /> Applications ({myRequests.length})</TabsTrigger>
-                        <TabsTrigger value="inbox" className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                            <Inbox className="h-4 w-4" /> Inbox
-                            {incomingRequests.length > 0 && <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center rounded-full bg-primary/20 text-primary border-0 shadow-none hover:bg-primary/20">{incomingRequests.length}</Badge>}
+                {/* TAB LIST + SEARCH */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-white/5 pb-6">
+                    <TabsList className="bg-slate-200/50 dark:bg-white/5 p-1 h-auto rounded-full border border-slate-200 dark:border-white/5 backdrop-blur-md">
+                        <TabsTrigger value="projects" className="rounded-full px-6 py-2.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"><BrainCircuit className="h-4 w-4 mr-2" /> Recommended</TabsTrigger>
+                        <TabsTrigger value="requests" className="rounded-full px-6 py-2.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"><Send className="h-4 w-4 mr-2" /> Applications ({myRequests.length})</TabsTrigger>
+                        <TabsTrigger value="inbox" className="rounded-full px-6 py-2.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all relative">
+                            Inbox
+                            {incomingRequests.length > 0 && <span className="ml-2 bg-red-500 text-white rounded-full text-[10px] h-5 w-5 flex items-center justify-center">{incomingRequests.length}</span>}
                         </TabsTrigger>
                     </TabsList>
 
-                    {/* SEARCH BAR */}
                     <div className="relative w-full sm:w-80 group">
-                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                        <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity rounded-full pointer-events-none" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors z-10" />
                         <Input
                             type="search"
                             placeholder="Search projects..."
-                            className="pl-9 bg-background/50 border-border/50 focus:border-primary/50 transition-all rounded-full"
+                            className="pl-11 h-11 bg-white/60 dark:bg-black/20 border-slate-200 dark:border-white/10 focus:border-primary/50 transition-all rounded-full relative z-0 placeholder:text-muted-foreground/50"
                             value={searchQuery}
                             onChange={handleSearch}
                         />
@@ -268,73 +317,86 @@ export default function DashboardPage() {
                 </div>
 
                 {/* === AI PROJECTS TAB === */}
-                <TabsContent value="projects" className="space-y-6 animate-in fade-in-50 zoom-in-95 duration-300">
+                <TabsContent value="projects" className="space-y-6">
                     {filteredProjects.length > 0 ? (
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                             {filteredProjects.map((project, index) => (
-                                <Card key={project._id || index} className="flex flex-col border-border/50 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
-                                    <CardHeader className="pb-3">
-                                        <div className="flex justify-between items-start gap-4">
-                                            <CardTitle className="font-headline text-lg line-clamp-1 group-hover:text-primary transition-colors">{project.title}</CardTitle>
-                                            <Badge variant="outline" className="shrink-0">{project.techStack?.[0] || "Tech"}</Badge>
-                                        </div>
-                                        <CardDescription>by <span className="font-medium text-foreground">{project.owner?.name}</span></CardDescription>
-                                    </CardHeader>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    key={project._id || index}
+                                >
+                                    <Card className="flex flex-col h-full border-slate-200 dark:border-white/5 bg-white/60 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 backdrop-blur-md transition-all duration-300 group hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 overflow-hidden relative shadow-sm dark:shadow-none">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
-                                    <CardContent className="flex-grow pb-4">
-                                        <p className="text-sm text-muted-foreground line-clamp-3 mb-4 min-h-[60px] leading-relaxed">
-                                            {getShortDescription(project.description)}
-                                        </p>
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {project.techStack?.slice(0, 3).map((t: any, i: number) => <Badge key={i} variant="secondary" className="text-xs font-normal">{t}</Badge>)}
-                                            {(project.techStack?.length || 0) > 3 && <Badge variant="secondary" className="text-xs font-normal">+{project.techStack.length - 3}</Badge>}
-                                        </div>
-                                    </CardContent>
+                                        <CardHeader className="pb-3 relative z-10">
+                                            <div className="flex justify-between items-start gap-4">
+                                                <CardTitle className="font-headline text-xl line-clamp-1 group-hover:text-primary transition-colors">{project.title}</CardTitle>
+                                                <Badge variant="outline" className="shrink-0 border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-black/20 backdrop-blur-md">{project.techStack?.[0] || "Tech"}</Badge>
+                                            </div>
+                                            <CardDescription>by <span className="font-medium text-foreground">{project.owner?.name}</span></CardDescription>
+                                        </CardHeader>
 
-                                    <CardFooter className="pt-0">
-                                        <Button className="w-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border-0" variant="outline" asChild>
-                                            <Link href={`/projects/${project._id}/collaborate`}>View Project</Link>
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
+                                        <CardContent className="flex-grow pb-4 relative z-10">
+                                            <p className="text-sm text-muted-foreground line-clamp-3 mb-6 min-h-[60px] leading-relaxed">
+                                                {getShortDescription(project.description)}
+                                            </p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {project.techStack?.slice(0, 3).map((t: any, i: number) => (
+                                                    <Badge key={i} variant="secondary" className="text-xs font-normal bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 text-muted-foreground group-hover:text-foreground transition-colors">
+                                                        {t}
+                                                    </Badge>
+                                                ))}
+                                                {(project.techStack?.length || 0) > 3 && <Badge variant="secondary" className="text-xs font-normal bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5">+{project.techStack.length - 3}</Badge>}
+                                            </div>
+                                        </CardContent>
+
+                                        <CardFooter className="pt-0 relative z-10">
+                                            <Button className="w-full bg-slate-100 dark:bg-white/5 hover:bg-primary hover:text-white border border-slate-200 dark:border-white/10 transition-all font-medium" asChild>
+                                                <Link href={`/projects/${project._id}/collaborate`}>View Project</Link>
+                                            </Button>
+                                        </CardFooter>
+                                    </Card>
+                                </motion.div>
                             ))}
                         </div>
                     ) : (
                         searchQuery ? (
                             <div className="text-center py-20 text-muted-foreground">
                                 <p className="text-lg">No projects match <span className="font-medium text-foreground">"{searchQuery}"</span></p>
-                                <Button variant="link" onClick={() => { setSearchQuery(""); setFilteredProjects(projects) }} className="mt-2">Clear Search</Button>
+                                <Button variant="link" onClick={() => { setSearchQuery(""); setFilteredProjects(projects) }} className="mt-2 text-primary">Clear Search</Button>
                             </div>
                         ) : <NoMatchSuggestions />
                     )}
                 </TabsContent>
 
-                {/* === OUTGOING REQUESTS TAB === */}
-                <TabsContent value="requests" className="mt-4 animate-in fade-in-50 zoom-in-95 duration-300">
-                    <Card className="border-border/50">
+                {/* ... other tabs (Requests/Inbox) ... */}
+
+                <TabsContent value="requests" className="mt-4">
+                    <Card className="border-slate-200 dark:border-white/5 bg-white/60 dark:bg-white/5 backdrop-blur-xl shadow-sm dark:shadow-none">
                         <CardHeader>
-                            <CardTitle className="font-headline flex items-center gap-2"><Send className="h-5 w-5" /> Sent Applications</CardTitle>
-                            <CardDescription>Track the status of your project applications.</CardDescription>
+                            <CardTitle className="font-headline flex items-center gap-2"><Send className="h-5 w-5 text-yellow-500" /> Sent Applications</CardTitle>
                         </CardHeader>
                         <CardContent>
                             {myRequests.length === 0 ? (
                                 <div className="text-center py-12 text-muted-foreground">
                                     <p>You haven't applied to any projects yet.</p>
-                                    <Button variant="link" asChild><Link href="/projects/new">Find a project</Link></Button>
+                                    <Button variant="link" asChild className="text-primary"><Link href="/projects/new">Find a project</Link></Button>
                                 </div>
                             ) : (
                                 <Table>
                                     <TableHeader>
-                                        <TableRow className="hover:bg-muted/50">
-                                            <TableHead>Project</TableHead>
-                                            <TableHead>Date Sent</TableHead>
-                                            <TableHead>Status</TableHead>
+                                        <TableRow className="hover:bg-slate-100/50 dark:hover:bg-white/5 border-slate-200 dark:border-white/5">
+                                            <TableHead className="text-muted-foreground">Project</TableHead>
+                                            <TableHead className="text-muted-foreground">Date Sent</TableHead>
+                                            <TableHead className="text-muted-foreground">Status</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {myRequests.map((req) => (
-                                            <TableRow key={req._id} className="hover:bg-muted/50">
-                                                <TableCell className="font-medium">{req.project?.title}</TableCell>
+                                            <TableRow key={req._id} className="hover:bg-slate-100/50 dark:hover:bg-white/5 border-slate-200 dark:border-white/5 transition-colors">
+                                                <TableCell className="font-medium text-foreground">{req.project?.title}</TableCell>
                                                 <TableCell className="text-muted-foreground">{new Date(req.createdAt).toLocaleDateString()}</TableCell>
                                                 <TableCell>{getStatusBadge(req.status)}</TableCell>
                                             </TableRow>
@@ -346,39 +408,37 @@ export default function DashboardPage() {
                     </Card>
                 </TabsContent>
 
-                {/* === INCOMING REQUESTS TAB === */}
-                <TabsContent value="inbox" className="mt-4 animate-in fade-in-50 zoom-in-95 duration-300">
-                    <Card className="border-border/50">
+                <TabsContent value="inbox" className="mt-4">
+                    <Card className="border-slate-200 dark:border-white/5 bg-white/60 dark:bg-white/5 backdrop-blur-xl shadow-sm dark:shadow-none">
                         <CardHeader>
                             <CardTitle className="font-headline flex items-center gap-2">
-                                <Inbox className="h-5 w-5" /> Incoming Requests
+                                <Inbox className="h-5 w-5 text-blue-500" /> Incoming Requests
                             </CardTitle>
-                            <CardDescription>Review developers who want to join your team.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {incomingRequests.length > 0 ? (
                                 <div className="space-y-4">
                                     {incomingRequests.map((req) => (
-                                        <div key={req._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border/50 bg-muted/20 hover:border-primary/30 transition-all gap-4">
+                                        <div key={req._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 hover:border-primary/30 transition-all gap-4 group">
                                             <div className="flex items-start gap-4">
-                                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold shadow-[0_0_15px_-5px_var(--primary)]">
                                                     {req.applicant?.name?.charAt(0) || "U"}
                                                 </div>
                                                 <div>
                                                     <div className="flex items-center gap-2">
-                                                        <h4 className="font-semibold text-sm">{req.applicant?.name || "Unknown User"}</h4>
-                                                        <Badge variant="outline" className="text-[10px] h-5">{req.applicant?.experienceLevel || "N/A"}</Badge>
+                                                        <h4 className="font-semibold text-sm group-hover:text-primary transition-colors">{req.applicant?.name || "Unknown User"}</h4>
+                                                        <Badge variant="outline" className="text-[10px] h-5 border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 text-muted-foreground">{req.applicant?.experienceLevel || "N/A"}</Badge>
                                                     </div>
                                                     <p className="text-sm text-muted-foreground mt-0.5">wants to join <span className="font-medium text-foreground">{req.project?.title}</span></p>
-                                                    {req.message && <p className="text-xs text-muted-foreground mt-2 bg-background p-2 rounded border border-border/50 italic">"{req.message}"</p>}
+                                                    {req.message && <p className="text-xs text-muted-foreground mt-2 bg-white/50 dark:bg-white/5 p-2 rounded border border-slate-200 dark:border-white/5 italic">"{req.message}"</p>}
                                                 </div>
                                             </div>
 
-                                            <div className="flexItems-center gap-2 self-end sm:self-center">
-                                                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10 h-9" onClick={() => handleRequestAction(req._id, 'rejected')}>
+                                            <div className="flex items-center gap-2 self-end sm:self-center">
+                                                <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-9" onClick={() => handleRequestAction(req._id, 'rejected')}>
                                                     <X className="h-4 w-4 mr-1" /> Reject
                                                 </Button>
-                                                <Button size="sm" className="h-9" onClick={() => handleRequestAction(req._id, 'accepted')}>
+                                                <Button size="sm" className="h-9 bg-primary/20 text-primary hover:bg-primary hover:text-white border-0" onClick={() => handleRequestAction(req._id, 'accepted')}>
                                                     <Check className="h-4 w-4 mr-1" /> Accept
                                                 </Button>
                                             </div>
@@ -387,7 +447,7 @@ export default function DashboardPage() {
                                 </div>
                             ) : (
                                 <div className="text-center py-12 text-muted-foreground">
-                                    <div className="h-12 w-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <div className="h-12 w-12 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <Inbox className="h-6 w-6 opacity-30" />
                                     </div>
                                     <p>No pending requests.</p>
