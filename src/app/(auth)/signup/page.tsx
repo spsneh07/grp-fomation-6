@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { X, PlusCircle, Loader2, Sparkles, User, Mail, Lock, Briefcase, ArrowRight } from 'lucide-react';
+import { X, PlusCircle, Loader2, Sparkles, User, Mail, Lock, Briefcase, ArrowRight, ChevronDown } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { toast } from "sonner";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -48,7 +48,8 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const payload = { ...formData, skills };
+      // TRANSFORM: Backend expects array of strings, but frontend state has objects
+      const payload = { ...formData, skills: skills.map(s => s.name) };
 
       const res = await fetch("/api/auth/signup", {
         method: "POST",
@@ -94,10 +95,7 @@ export default function SignupPage() {
         <div className="absolute bottom-[10%] left-[10%] w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px]" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6 }}
+      <div
         className="w-full max-w-2xl relative z-10"
       >
         <Card className="shadow-2xl border-border/50 dark:border-white/10 bg-white/80 dark:bg-black/40 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-500 overflow-hidden">
@@ -165,16 +163,18 @@ export default function SignupPage() {
 
                 <div className="space-y-2 group">
                   <Label htmlFor="experience" className="ml-1 text-xs uppercase tracking-wider text-muted-foreground font-semibold">Experience Level</Label>
-                  <Select onValueChange={(value) => setFormData({ ...formData, experienceLevel: value })}>
-                    <SelectTrigger className="h-11 border-border/50 dark:border-white/10 bg-muted/50 dark:bg-white/5 focus:border-primary/50 focus:ring-primary/20 transition-all rounded-lg">
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white/90 dark:bg-black/90 border-border/50 dark:border-white/10 backdrop-blur-xl">
-                      <SelectItem value="Beginner">Beginner (0-2 years)</SelectItem>
-                      <SelectItem value="Intermediate">Intermediate (2-5 years)</SelectItem>
-                      <SelectItem value="Advanced">Advanced (5+ years)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="relative">
+                    <select
+                      className="flex h-11 w-full items-center justify-between rounded-lg border border-border/50 dark:border-white/10 bg-muted/50 dark:bg-white/5 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                      value={formData.experienceLevel}
+                      onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
+                    >
+                      <option value="" disabled>Select level</option>
+                      <option value="Beginner">Beginner (0-2 years)</option>
+                      <option value="Intermediate">Intermediate (2-5 years)</option>
+                      <option value="Advanced">Advanced (5+ years)</option>
+                    </select>
+                  </div>
                 </div>
 
               </div>
@@ -254,7 +254,7 @@ export default function SignupPage() {
             </CardFooter>
           </form>
         </Card>
-      </motion.div>
+      </div>
     </div>
   );
 }

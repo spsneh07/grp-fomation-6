@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -17,7 +17,7 @@ import {
     Send, Users, MessageSquare, Layout, Loader2,
     Plus, MoreVertical, Flag, User as UserIcon,
     Trash2, Calendar as CalendarIcon, Tag, CheckCheck,
-    Reply, Edit2, X, Code, FileUp, Image as ImageIcon, Github, Sparkles
+    Reply, Edit2, X, Code, FileUp, Image as ImageIcon, Github, Sparkles, ChevronDown
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from "sonner";
@@ -605,39 +605,51 @@ export default function CollaboratePage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Status</Label>
-                                    <Select value={activeTask.status} onValueChange={(val) => handleUpdateTask(activeTask._id, { status: val })}>
-                                        <SelectTrigger><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="todo">To Do</SelectItem>
-                                            <SelectItem value="in-progress">In Progress</SelectItem>
-                                            <SelectItem value="done">Done</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="relative">
+                                        <select
+                                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                                            value={activeTask.status}
+                                            onChange={(e) => handleUpdateTask(activeTask._id, { status: e.target.value })}
+                                        >
+                                            <option value="todo">To Do</option>
+                                            <option value="in-progress">In Progress</option>
+                                            <option value="done">Done</option>
+                                        </select>
+                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Priority</Label>
-                                    <Select value={activeTask.priority || 'medium'} onValueChange={(val) => handleUpdateTask(activeTask._id, { priority: val })}>
-                                        <SelectTrigger><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="low">Low</SelectItem>
-                                            <SelectItem value="medium">Medium</SelectItem>
-                                            <SelectItem value="high">High</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="relative">
+                                        <select
+                                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                                            value={activeTask.priority || 'medium'}
+                                            onChange={(e) => handleUpdateTask(activeTask._id, { priority: e.target.value })}
+                                        >
+                                            <option value="low">Low</option>
+                                            <option value="medium">Medium</option>
+                                            <option value="high">High</option>
+                                        </select>
+                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Assignee</Label>
-                                    <Select value={activeTask.assignedTo?._id || "unassigned"} onValueChange={(val) => handleUpdateTask(activeTask._id, { assignedTo: val })}>
-                                        <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="unassigned">Unassigned</SelectItem>
-                                            <SelectItem value={project.owner?._id}>{project.owner?.name} (Owner)</SelectItem>
-                                            {project.team?.map((m: any) => (<SelectItem key={m.user?._id} value={m.user?._id}>{m.user?.name}</SelectItem>))}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="relative">
+                                        <select
+                                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                                            value={activeTask.assignedTo?._id || "unassigned"}
+                                            onChange={(e) => handleUpdateTask(activeTask._id, { assignedTo: e.target.value })}
+                                        >
+                                            <option value="unassigned">Unassigned</option>
+                                            <option value={project.owner?._id}>{project.owner?.name} (Owner)</option>
+                                            {project.team?.map((m: any) => (<option key={m.user?._id} value={m.user?._id}>{m.user?.name}</option>))}
+                                        </select>
+                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Due Date</Label>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Bell, Check, Info } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+// import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 import {
@@ -81,24 +81,14 @@ export default function NotificationBell() {
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
-          <motion.div
-            key={unreadCount}
-            initial={{ rotate: 0 }}
-            animate={unreadCount > 0 ? { rotate: [0, -10, 10, -10, 10, 0] } : { rotate: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div className="hover:rotate-12 transition-transform duration-300">
             <Bell className="h-5 w-5" />
-          </motion.div>
-          <AnimatePresence>
-            {unreadCount > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-                className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-600 border-2 border-background shadow-[0_0_10px_rgba(220,38,38,0.5)]"
-              />
-            )}
-          </AnimatePresence>
+          </div>
+          {unreadCount > 0 && (
+            <span
+              className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-600 border-2 border-background shadow-[0_0_10px_rgba(220,38,38,0.5)]"
+            />
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0 rounded-xl border border-border/40 bg-background/95 backdrop-blur-xl shadow-xl" align="end">

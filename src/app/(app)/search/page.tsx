@@ -8,284 +8,157 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Search, Loader2, UserPlus, MapPin, Briefcase, Sparkles, Zap, Brain } from "lucide-react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+// import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"; // WAIT, I don't want to replace tabs import. I want to remove line 12.
+// Line 12 is: // import { motion, AnimatePresence } from "framer-motion";
+// I will just replace it with empty string or nothing? replace_file_content replaces the target.
+
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type SearchMode = 'basic' | 'smart';
 
 export default function SearchProfilesPage() {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [searchMode, setSearchMode] = useState<SearchMode>('basic');
-  const [aiPowered, setAiPowered] = useState(false);
+    const [query, setQuery] = useState("");
+    const [results, setResults] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [debouncedQuery, setDebouncedQuery] = useState("");
+    const [mode, setMode] = useState<SearchMode>('basic');
 
-  // Function to fetch users based on search query
-  const searchUsers = async (searchTerm: string, mode: SearchMode) => {
-    if (!searchTerm) {
-      setResults([]);
-      return;
-    }
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedQuery(query);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [query]);
 
-    setLoading(true);
-    setHasSearched(true);
+    useEffect(() => {
+        if (debouncedQuery.trim().length > 0) {
+            handleSearch();
+        } else {
+            setResults([]);
+        }
+    }, [debouncedQuery, mode]);
 
-    try {
-      const endpoint = mode === 'smart'
-        ? `/api/ai/users/match?q=${encodeURIComponent(searchTerm)}`
-        : `/api/users/search?q=${encodeURIComponent(searchTerm)}`;
+    const handleSearch = async () => {
+        if (!debouncedQuery.trim()) return;
 
-      const res = await fetch(endpoint);
-      const data = await res.json();
+        setLoading(true);
+        try {
+            const endpoint = mode === 'smart' ? '/api/users/search/smart' : '/api/users/search';
+            const res = await fetch(`${endpoint}?q=${encodeURIComponent(debouncedQuery)}`);
+            const data = await res.json();
+            setResults(data.users || []);
+        } catch (error) {
+            console.error("Search failed", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-      if (res.ok) {
-        setResults(data.users || []);
-        setAiPowered(data.aiPowered || false);
-      }
-    } catch (error) {
-      console.error("Failed to search users:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return (
+        <div className="space-y-6 pt-6 pb-20 max-w-5xl mx-auto px-4 min-h-screen">
 
-  // Debounce logic
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (query) {
-        searchUsers(query, searchMode);
-      } else {
-        setResults([]);
-        setHasSearched(false);
-      }
-    }, 500);
+            {/* HEADER */}
+            <div className="space-y-2 text-center mb-8">
+                <h1 className="text-3xl font-bold tracking-tight font-headline">Find Collaborators</h1>
+                <p className="text-muted-foreground">Discover talented individuals for your next project.</p>
+            </div>
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [query, searchMode]);
+            {/* SEARCH BAR */}
+            <div className="sticky top-4 z-30 bg-background/80 backdrop-blur-md p-4 rounded-xl border border-border/50 shadow-sm">
+                <div className="flex flex-col gap-4">
+                    <div className="flex gap-2">
+                        <div className="relative flex-grow">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                            <Input
+                                placeholder={mode === 'smart' ? "Describe who you're looking for (e.g. 'React dev who knows AI')..." : "Search by name, skill, or role..."}
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                className="pl-10 h-12 bg-muted/50 border-input/50 focus:bg-background transition-all"
+                            />
+                        </div>
+                    </div>
 
-  // Get compatibility badge color
-  const getScoreBadgeVariant = (score: number) => {
-    if (score >= 90) return "default";
-    if (score >= 75) return "secondary";
-    return "outline";
-  };
-
-  return (
-    <div className="space-y-12 max-w-6xl mx-auto pb-20">
-      {/* Header & Search Input */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-8 items-center text-center mt-10"
-      >
-        <div className="space-y-4">
-          <Badge variant="outline" className="py-1 px-3 border-primary/30 bg-primary/10 text-primary uppercase tracking-wider text-xs">Network</Badge>
-          <h1 className="text-5xl font-bold font-headline tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-slate-900 to-slate-600 dark:from-white dark:to-white/60">Find Collaborators</h1>
-          <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-light leading-relaxed">
-            Connect with skilled developers for your next big project. <br className="hidden sm:block" />
-            Search by name, role, or skills.
-          </p>
-        </div>
-
-        {/* Search Mode Toggle */}
-        <Tabs value={searchMode} onValueChange={(v) => setSearchMode(v as SearchMode)} className="w-auto">
-          <TabsList className="bg-white/60 dark:bg-white/5 border border-slate-200 dark:border-white/10">
-            <TabsTrigger value="basic" className="gap-2">
-              <Search className="h-4 w-4" />
-              Basic Search
-            </TabsTrigger>
-            <TabsTrigger value="smart" className="gap-2">
-              <Brain className="h-4 w-4" />
-              <span className="flex items-center gap-1">
-                Smart Match
-                <Sparkles className="h-3 w-3" />
-              </span>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        <div className="relative w-full max-w-2xl group z-10">
-          <div className="absolute inset-0 bg-primary/30 blur-3xl rounded-full opacity-20 group-focus-within:opacity-60 transition-opacity duration-700" />
-          <div className="relative">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors duration-300" />
-            <Input
-              placeholder={searchMode === 'smart' ? "Try 'React developer' for AI-powered matching..." : "Try searching 'React', 'Backend', or 'John'..."}
-              className="pl-14 h-16 text-lg rounded-full border-slate-200 dark:border-white/10 bg-white/60 dark:bg-black/40 backdrop-blur-xl shadow-2xl focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all placeholder:text-muted-foreground/50"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            {loading && (
-              <div className="absolute right-5 top-1/2 -translate-y-1/2">
-                <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* AI Status Indicator */}
-        {searchMode === 'smart' && aiPowered && results.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-2 text-sm text-primary"
-          >
-            <Sparkles className="h-4 w-4 animate-pulse" />
-            <span>AI-powered matching active</span>
-          </motion.div>
-        )}
-      </motion.div>
-
-      {/* Results Section */}
-      <div className="min-h-[400px]">
-        <AnimatePresence mode="wait">
-          {loading && !results.length ? (
-            // Skeleton / Loading State kept minimal as indicator is in input
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center py-20 text-muted-foreground"
-            >
-              <p className="text-lg animate-pulse">
-                {searchMode === 'smart' ? 'AI is analyzing matches...' : 'Scouring the network...'}
-              </p>
-            </motion.div>
-          ) : results.length > 0 ? (
-            <motion.div
-              key="results"
-              className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {results.map((user, index) => (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  key={user._id}
-                >
-                  <Card className="flex flex-col h-full border-slate-200 dark:border-white/5 bg-white/60 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 backdrop-blur-md transition-all duration-300 group hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 overflow-hidden relative shadow-sm dark:shadow-none">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
-                    <CardHeader className="flex flex-row items-center gap-4 pb-4 relative z-10">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary to-violet-500 rounded-full blur opacity-0 group-hover:opacity-70 transition-opacity duration-500" />
-                        <Avatar className="h-16 w-16 border-2 border-slate-200 dark:border-white/10 group-hover:border-transparent transition-colors relative z-10">
-                          <AvatarImage src={user.image || user.avatarUrl} alt={user.name} />
-                          <AvatarFallback className="text-xl font-bold bg-slate-100 dark:bg-white/10 text-primary">{user.name?.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                      </div>
-
-                      <div className="flex-1 overflow-hidden">
-                        <CardTitle className="text-lg truncate font-headline group-hover:text-primary transition-colors">{user.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-1.5 truncate text-sm mt-1 text-muted-foreground/80">
-                          <Briefcase className="h-3.5 w-3.5 text-primary/70" />
-                          {user.jobTitle || "Developer"}
-                        </CardDescription>
-                      </div>
-                    </CardHeader>
-
-                    <CardContent className="flex-grow relative z-10">
-                      {/* AI Match Score Badge */}
-                      {searchMode === 'smart' && user.compatibilityScore !== undefined && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="mb-3">
-                                <Badge
-                                  variant={getScoreBadgeVariant(user.compatibilityScore)}
-                                  className="gap-1.5 py-1 px-3 bg-gradient-to-r from-primary/20 to-violet-500/20 border-primary/30 text-primary font-semibold"
-                                >
-                                  <Sparkles className="h-3 w-3" />
-                                  {user.compatibilityScore}% Match
-                                </Badge>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs bg-black/90 text-white border-white/10">
-                              <p className="text-sm">{user.matchReasoning || 'AI-generated compatibility score'}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4 h-10 leading-relaxed font-light">
-                        {user.bio || "Passionate developer looking for exciting projects."}
-                      </p>
-
-                      {/* Skills Tags */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {user.skills?.slice(0, 4).map((skill: string, index: number) => (
-                          <Badge key={index} variant="secondary" className="text-[10px] px-2 py-0.5 h-6 bg-slate-100 dark:bg-primary/10 text-muted-foreground dark:text-primary border border-slate-200 dark:border-primary/10 hover:bg-slate-200 dark:hover:bg-primary/20 transition-colors">
-                            {skill}
-                          </Badge>
-                        ))}
-                        {(user.skills?.length || 0) > 4 && (
-                          <Badge variant="outline" className="text-[10px] h-6 border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-muted-foreground">+{user.skills.length - 4}</Badge>
-                        )}
-                      </div>
-                    </CardContent>
-
-                    <CardFooter className="pt-2 relative z-10">
-                      <Button className="w-full gap-2 bg-slate-100 dark:bg-white/5 hover:bg-primary hover:text-white border border-slate-200 dark:border-white/10 hover:border-primary/20 transition-all font-medium group/btn" variant="outline" asChild>
-                        <Link href={`/profile/${user._id}`}>
-                          View Profile <Zap className="w-3.5 h-3.5 group-hover/btn:fill-current" />
-                        </Link>
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </motion.div>
-              ))}
-            </motion.div>
-          ) : hasSearched ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-20 text-muted-foreground bg-white/60 dark:bg-white/5 rounded-3xl border border-dashed border-slate-300 dark:border-white/10 max-w-lg mx-auto"
-            >
-              <div className="h-16 w-16 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-5">
-                <UserPlus className="h-8 w-8 opacity-30" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">No profiles found</h3>
-              <p className="max-w-xs mx-auto text-sm leading-relaxed">
-                We couldn't find anyone matching "{query}".
-                Try searching for specific skills like <span className="text-primary font-medium">React</span> or <span className="text-primary font-medium">Design</span>.
-              </p>
-            </motion.div>
-          ) : (
-            /* Initial Empty State */
-            <motion.div
-              key="initial"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-24 text-muted-foreground"
-            >
-              <div className="relative inline-block mb-6">
-                <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full opacity-50 animate-pulse-slow" />
-                <div className="h-20 w-20 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center relative border border-slate-200 dark:border-white/10">
-                  {searchMode === 'smart' ? (
-                    <Brain className="h-8 w-8 opacity-40" />
-                  ) : (
-                    <Search className="h-8 w-8 opacity-40" />
-                  )}
+                    <Tabs defaultValue="basic" onValueChange={(v) => setMode(v as SearchMode)} className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="basic">Basic Search</TabsTrigger>
+                            <TabsTrigger value="smart" className="text-primary"><Sparkles className="w-3 h-3 mr-2" /> AI Smart Match</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
                 </div>
-              </div>
-              <h2 className="text-xl font-medium mb-2 text-foreground">
-                {searchMode === 'smart' ? 'AI-Powered Matching Ready' : 'Start exploring'}
-              </h2>
-              <p className="text-lg opacity-50 font-light">
-                {searchMode === 'smart'
-                  ? 'Use Smart Match to find your perfect collaborators with AI ✨'
-                  : 'Type something above to discover amazing talent.'}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
+            </div>
+
+            {/* RESULTS GRID */}
+            <div
+                className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+            >
+                {loading ? (
+                    <div className="col-span-full py-12 text-center space-y-4">
+                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+                        <p className="text-muted-foreground">Searching network...</p>
+                    </div>
+                ) : results.length > 0 ? (
+                    results.map((user) => (
+                        <div
+                            key={user._id}
+                            className="h-full"
+                        >
+                            <Card className="h-full hover:shadow-lg transition-all hover:border-primary/30 group bg-card/50 backdrop-blur-sm">
+                                <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                                    <Avatar className="h-12 w-12 border-2 border-background ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
+                                        <AvatarImage src={user.avatarUrl} />
+                                        <AvatarFallback className="bg-primary/5 text-primary font-bold">{user.name?.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0">
+                                        <CardTitle className="text-lg font-bold truncate group-hover:text-primary transition-colors">{user.name}</CardTitle>
+                                        <CardDescription className="truncate">{user.jobTitle || "Member"}</CardDescription>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    {user.bio && <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">{user.bio}</p>}
+
+                                    <div className="flex flex-wrap gap-1.5 h-[52px] overflow-hidden content-start">
+                                        {user.skills?.slice(0, 4).map((skill: any, i: number) => (
+                                            <Badge key={i} variant="secondary" className="px-2 py-0.5 text-xs bg-secondary/50">{typeof skill === 'string' ? skill : skill.name}</Badge>
+                                        ))}
+                                        {user.skills?.length > 4 && <Badge variant="outline" className="text-xs">+{user.skills.length - 4}</Badge>}
+                                    </div>
+
+                                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-auto pt-2">
+                                        <div className="flex items-center gap-1"><Briefcase className="w-3 h-3" /> {user.experienceLevel || "Beginner"}</div>
+                                        <div className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {user.location || "Remote"}</div>
+                                    </div>
+                                </CardContent>
+                                <CardFooter>
+                                    <Button className="w-full gap-2 shadow-lg shadow-primary/5 group-hover:shadow-primary/20 transition-all" asChild>
+                                        <Link href={`/users/${user._id}`}>
+                                            <UserPlus className="w-4 h-4" /> View Profile
+                                        </Link>
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        </div>
+                    ))
+                ) : (
+                    query && (
+                        <div className="col-span-full py-20 text-center space-y-4 opacity-70">
+                            <Search className="w-12 h-12 mx-auto text-muted-foreground/30" />
+                            <h3 className="text-lg font-medium">No results found</h3>
+                            <p className="text-muted-foreground">Try adjusting your search terms</p>
+                        </div>
+                    )
+                )}
+            </div>
+
+            {!query && (
+                <div className="text-center py-20 opacity-50 space-y-4">
+                    <div className="w-20 h-20 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Brain className="w-10 h-10 text-muted-foreground" />
+                    </div>
+                    <h2 className="text-xl font-semibold">Start Exploring</h2>
+                    <p className="max-w-md mx-auto text-muted-foreground">Search for skills like "React", "Python", or roles like "Designer". Try Smart Match to find people by description.</p>
+                </div>
+            )}
+        </div>
+    );
 }

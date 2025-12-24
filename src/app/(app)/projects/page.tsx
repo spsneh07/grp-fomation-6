@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Users, PlusCircle, Loader2, FolderKanban, Sparkles, FolderOpen, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 
 export default function MyProjectsPage() {
   const router = useRouter();
@@ -72,9 +72,9 @@ export default function MyProjectsPage() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center gap-2 text-muted-foreground">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
-          <Loader2 className="h-6 w-6 text-primary" />
-        </motion.div>
+        <div className="flex items-center justify-center">
+          <Loader2 className="h-6 w-6 text-primary animate-spin" />
+        </div>
         <span className="text-lg font-medium">Loading Projects...</span>
       </div>
     );
@@ -83,9 +83,7 @@ export default function MyProjectsPage() {
   return (
     <div className="space-y-12 pb-20">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-slate-200 dark:border-white/5 pb-8"
       >
         <div>
@@ -100,7 +98,7 @@ export default function MyProjectsPage() {
             Create New Project
           </Link>
         </Button>
-      </motion.div>
+      </div>
 
       {/* Created Projects */}
       <section className="space-y-6">
@@ -114,20 +112,15 @@ export default function MyProjectsPage() {
         {createdProjects.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {createdProjects.map((project, index) => (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+              <div
                 key={project._id}
               >
                 <ProjectCard project={project} isCreator />
-              </motion.div>
+              </div>
             ))}
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <div
             className="flex flex-col items-center justify-center py-16 border border-dashed border-slate-300 dark:border-white/10 rounded-2xl bg-white/60 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 transition-colors gap-4 text-center group cursor-pointer relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -141,7 +134,7 @@ export default function MyProjectsPage() {
             <Button variant="outline" asChild className="mt-4 border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-black/20 relative z-10">
               <Link href="/projects/new">Create Project</Link>
             </Button>
-          </motion.div>
+          </div>
         )}
       </section>
 
@@ -157,14 +150,11 @@ export default function MyProjectsPage() {
         {joinedProjects.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {joinedProjects.map((project, index) => (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 + 0.2 }}
+              <div
                 key={project._id}
               >
                 <ProjectCard project={project} />
-              </motion.div>
+              </div>
             ))}
           </div>
         ) : (

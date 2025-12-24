@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { X, PlusCircle, Loader2, Sparkles, Rocket } from 'lucide-react';
+import { X, PlusCircle, Loader2, Sparkles, Rocket, ChevronDown } from 'lucide-react';
 import { toast } from "sonner";
 import { useRouter } from 'next/navigation';
 
@@ -95,7 +95,7 @@ export default function CreateProjectPage() {
 
             if (res.ok) {
                 toast.success("Project Created! 🎉", { description: "Your project is now live." });
-                router.push('/dashboard');
+                router.push('/projects');
             } else {
                 throw new Error("Failed to save project");
             }
@@ -155,31 +155,40 @@ export default function CreateProjectPage() {
                             </div>
                         </div>
 
-                        {/* Dropdowns */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <Label className="font-semibold">Project Type</Label>
-                                <Select required onValueChange={setType}>
-                                    <SelectTrigger className="bg-background/50 border-border/60 h-10"><SelectValue placeholder="Select type" /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Hackathon">Hackathon</SelectItem>
-                                        <SelectItem value="NGO">NGO</SelectItem>
-                                        <SelectItem value="Startup">Startup</SelectItem>
-                                        <SelectItem value="Social">Social</SelectItem>
-                                        <SelectItem value="Personal">Personal Portfolio</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                        <div className="space-y-2">
+                            <Label className="font-semibold">Project Type</Label>
+                            <div className="relative">
+                                <select
+                                    required
+                                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none border-border/60"
+                                    value={type}
+                                    onChange={(e) => setType(e.target.value)}
+                                >
+                                    <option value="" disabled className="bg-background text-foreground">Select type</option>
+                                    <option value="Hackathon" className="bg-background text-foreground">Hackathon</option>
+                                    <option value="NGO" className="bg-background text-foreground">NGO</option>
+                                    <option value="Startup" className="bg-background text-foreground">Startup</option>
+                                    <option value="Social" className="bg-background text-foreground">Social</option>
+                                    <option value="Personal" className="bg-background text-foreground">Personal Portfolio</option>
+                                </select>
+                                <ChevronDown className="absolute right-3 top-3 h-4 w-4 opacity-50 pointer-events-none" />
                             </div>
-                            <div className="space-y-2">
-                                <Label className="font-semibold">Time Commitment</Label>
-                                <Select required onValueChange={setTimeCommitment}>
-                                    <SelectTrigger className="bg-background/50 border-border/60 h-10"><SelectValue placeholder="Select commitment" /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Part-time">Part-time (&lt; 10hrs/wk)</SelectItem>
-                                        <SelectItem value="Full-time">Full-time (&gt; 30hrs/wk)</SelectItem>
-                                        <SelectItem value="Casual">Casual / Weekend</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="font-semibold">Time Commitment</Label>
+                            <div className="relative">
+                                <select
+                                    required
+                                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none border-border/60"
+                                    value={timeCommitment}
+                                    onChange={(e) => setTimeCommitment(e.target.value)}
+                                >
+                                    <option value="" disabled className="bg-background text-foreground">Select commitment</option>
+                                    <option value="Part-time" className="bg-background text-foreground">Part-time (&lt; 10hrs/wk)</option>
+                                    <option value="Full-time" className="bg-background text-foreground">Full-time (&gt; 30hrs/wk)</option>
+                                    <option value="Casual" className="bg-background text-foreground">Casual / Weekend</option>
+                                </select>
+                                <ChevronDown className="absolute right-3 top-3 h-4 w-4 opacity-50 pointer-events-none" />
                             </div>
                         </div>
 
@@ -235,14 +244,31 @@ export default function CreateProjectPage() {
                             <Label className="font-semibold">Who are you looking for?</Label>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                 {availableRoles.map((role) => (
-                                    <div key={role} className={`flex items-center space-x-3 p-3 rounded-lg border transition-all cursor-pointer ${selectedRoles.includes(role) ? 'border-primary bg-primary/5' : 'border-border/60 hover:border-primary/30 hover:bg-muted/30'}`} onClick={() => toggleRole(role)}>
+                                    <div
+                                        key={role}
+                                        className={`flex items-center space-x-3 p-3 rounded-lg border transition-all
+                                            ${selectedRoles.includes(role)
+                                                ? 'border-primary bg-primary/5'
+                                                : 'border-border/60 hover:border-primary/30 hover:bg-muted/30'
+                                            }`}
+                                    >
                                         <Checkbox
                                             id={`role-${role}`}
                                             checked={selectedRoles.includes(role)}
+                                            onCheckedChange={(checked) => {
+                                                setSelectedRoles((prev) =>
+                                                    checked
+                                                        ? [...prev, role]
+                                                        : prev.filter((r) => r !== role)
+                                                );
+                                            }}
                                             className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                            onCheckedChange={() => toggleRole(role)}
                                         />
-                                        <Label htmlFor={`role-${role}`} className="font-normal cursor-pointer flex-grow">
+
+                                        <Label
+                                            htmlFor={`role-${role}`}
+                                            className="font-normal cursor-pointer flex-grow"
+                                        >
                                             {role}
                                         </Label>
                                     </div>

@@ -121,4 +121,10 @@ h6 {
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Fix for native select options in dark mode */
+  select option {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
 }

@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { X, PlusCircle, Book, Award, Loader2, ArrowLeft, Github, Linkedin, Globe, Image as ImageIcon } from 'lucide-react';
+import { X, PlusCircle, Book, Award, Loader2, ArrowLeft, Github, Linkedin, Globe, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { useRouter } from 'next/navigation';
@@ -272,27 +272,35 @@ export default function EditProfilePage() {
                             </div>
                             <div className="space-y-2">
                                 <Label>Availability</Label>
-                                <Select value={formData.availability} onValueChange={(val) => setFormData({ ...formData, availability: val })}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Part-time">Part-time</SelectItem>
-                                        <SelectItem value="Full-time">Full-time</SelectItem>
-                                        <SelectItem value="Flexible">Flexible</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <div className="relative">
+                                    <select
+                                        className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                                        value={formData.availability}
+                                        onChange={(e) => setFormData({ ...formData, availability: e.target.value })}
+                                    >
+                                        <option value="Part-time">Part-time</option>
+                                        <option value="Full-time">Full-time</option>
+                                        <option value="Flexible">Flexible</option>
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
+                                </div>
                             </div>
                         </div>
 
                         <div className="space-y-2">
                             <Label>Experience Level</Label>
-                            <Select value={formData.experienceLevel} onValueChange={(val) => setFormData({ ...formData, experienceLevel: val })}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Beginner">Beginner</SelectItem>
-                                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                                    <SelectItem value="Advanced">Advanced</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <div className="relative">
+                                <select
+                                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                                    value={formData.experienceLevel}
+                                    onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
+                                >
+                                    <option value="Beginner">Beginner</option>
+                                    <option value="Intermediate">Intermediate</option>
+                                    <option value="Advanced">Advanced</option>
+                                </select>
+                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
+                            </div>
                         </div>
 
                         <div className="space-y-2">
@@ -356,14 +364,18 @@ export default function EditProfilePage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                                         <div>
                                             <Label className="text-sm">Proficiency</Label>
-                                            <Select value={skill.level} onValueChange={(value) => handleUpdateSkill(skill.id!, 'level', value)}>
-                                                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Beginner">Beginner</SelectItem>
-                                                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                                                    <SelectItem value="Advanced">Advanced</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            <div className="relative mt-1">
+                                                <select
+                                                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                                                    value={skill.level}
+                                                    onChange={(e) => handleUpdateSkill(skill.id!, 'level', e.target.value)}
+                                                >
+                                                    <option value="Beginner">Beginner</option>
+                                                    <option value="Intermediate">Intermediate</option>
+                                                    <option value="Advanced">Advanced</option>
+                                                </select>
+                                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
+                                            </div>
                                         </div>
                                         <div className="flex items-center justify-between mt-5 p-3 rounded-md bg-muted">
                                             <Label className="flex items-center gap-2"><Book className="h-4 w-4" /> Learner</Label>

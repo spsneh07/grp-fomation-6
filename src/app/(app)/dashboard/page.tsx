@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { Line, LineChart, ResponsiveContainer, Tooltip } from "recharts";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -41,11 +40,7 @@ const dataSmall = [
 ];
 
 const MetricCard = ({ title, value, subtext, icon: Icon, color, delay }: any) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay }}
-        whileHover={{ y: -5, boxShadow: `0 10px 30px -10px ${color}40` }}
+    <div
         className="relative overflow-hidden rounded-2xl border border-border/50 dark:border-white/5 bg-card/80 dark:bg-white/5 p-6 backdrop-blur-xl transition-all shadow-sm dark:shadow-none"
     >
         <div className={`absolute top-0 right-0 p-4 opacity-10 dark:opacity-20`} style={{ color }}>
@@ -76,7 +71,7 @@ const MetricCard = ({ title, value, subtext, icon: Icon, color, delay }: any) =>
 
         {/* Glow Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/40 dark:to-white/5 pointer-events-none" />
-    </motion.div>
+    </div>
 );
 
 export default function DashboardPage() {
@@ -230,9 +225,9 @@ export default function DashboardPage() {
 
     if (loading) return (
         <div className="flex h-screen items-center justify-center gap-2 text-muted-foreground">
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
-                <Loader2 className="h-6 w-6 text-primary" />
-            </motion.div>
+            <div>
+                <Loader2 className="h-6 w-6 text-primary animate-spin" />
+            </div>
             <span className="text-lg font-medium">Loading Dashboard...</span>
         </div>
     );
@@ -240,19 +235,17 @@ export default function DashboardPage() {
     return (
         <div className="space-y-8 pb-10">
             {/* HEADER */}
-            <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
+            <div
                 className="flex items-center justify-between"
             >
                 <div>
                     <h1 className="font-headline text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-white/60">Overview</h1>
                     <p className="text-muted-foreground mt-1 text-lg">Welcome back, {user.name?.split(' ')[0] || 'User'}. Here's what's happening.</p>
                 </div>
-                <Button asChild className="hidden sm:flex h-11 px-6 bg-primary hover:bg-primary/90 shadow-[0_0_20px_-5px_var(--primary)] transition-all hover:scale-105">
+                <Button asChild className="hidden sm:flex h-11 px-6 bg-primary hover:bg-primary/90 shadow-[0_0_20px_-5px_var(--primary)] transition-all">
                     <Link href="/projects/new"><Sparkles className="mr-2 h-4 w-4" /> Post New Project</Link>
                 </Button>
-            </motion.div>
+            </div>
 
             {/* HERO METRICS GRID */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -321,10 +314,7 @@ export default function DashboardPage() {
                     {filteredProjects.length > 0 ? (
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                             {filteredProjects.map((project, index) => (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.1 }}
+                                <div
                                     key={project._id || index}
                                 >
                                     <Card className="flex flex-col h-full border-border/50 dark:border-white/5 bg-card/80 dark:bg-white/5 hover:bg-card/100 dark:hover:bg-white/10 backdrop-blur-md transition-all duration-300 group hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 overflow-hidden relative shadow-sm dark:shadow-none">
@@ -358,7 +348,7 @@ export default function DashboardPage() {
                                             </Button>
                                         </CardFooter>
                                     </Card>
-                                </motion.div>
+                                </div>
                             ))}
                         </div>
                     ) : (

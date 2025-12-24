@@ -12,7 +12,6 @@ import { Logo } from '@/components/logo';
 import { Loader2, Mail, Lock, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
-import { motion } from "framer-motion";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -61,14 +60,11 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center p-4 relative overflow-hidden bg-background">
       {/* Mesh Gradients - Luminous Background */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-violet-500/10 rounded-full blur-[120px]" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
+      <div
         className="w-full max-w-md relative z-10"
       >
         <Card className="shadow-2xl border-border/50 bg-white/80 dark:bg-black/40 backdrop-blur-xl overflow-hidden">
@@ -127,10 +123,10 @@ export default function LoginPage() {
             </CardContent>
 
             <CardFooter className="flex flex-col gap-5 pt-2 pb-8">
-              <Button className="w-full h-11 font-medium text-base bg-primary hover:bg-primary/90 shadow-[0_0_20px_-5px_var(--primary)] transition-all hover:scale-[1.02]" type="submit" disabled={loading}>
+              <Button className="w-full h-11 font-medium text-base bg-primary hover:bg-primary/90 shadow-[0_0_20px_-5px_var(--primary)] transition-all" type="submit" disabled={loading}>
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Logging in...
+                    <Loader2 className="mr-2 h-4 w-4" /> Logging in...
                   </>
                 ) : (
                   <>
@@ -164,7 +160,7 @@ export default function LoginPage() {
         <p className="text-center text-xs text-muted-foreground/30 mt-8">
           &copy; {new Date().getFullYear()} SynergyHub AI. All rights reserved.
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 }
