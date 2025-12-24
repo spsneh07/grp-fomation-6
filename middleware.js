@@ -1,35 +1,36 @@
 import { NextResponse } from 'next/server';
 
-// This function runs before every request to the specific paths defined below
 export function middleware(request) {
   const path = request.nextUrl.pathname;
+  const isPublicPath = path === '/login' || path === '/signup' || path === '/forgot-password' || path.startsWith('/reset-password');
 
-  // Define paths that are public (accessible without login)
-  const isPublicPath = path === '/login' || path === '/signup';
+  // Check for the token (or session cookie if using NextAuth)
+  // Note: NextAuth uses 'next-auth.session-token' or '__Secure-next-auth.session-token'
+  const token = request.cookies.get('token')?.value || 
+                request.cookies.get('next-auth.session-token')?.value || 
+                request.cookies.get('__Secure-next-auth.session-token')?.value;
 
-  // Get the token from the cookies
-  const token = request.cookies.get('token')?.value || '';
-
-  // 1. If user is ON a public path (like login) BUT has a token, 
-  // redirect them to the dashboard (they are already logged in).
+  // 1. Redirect LOGGED-IN users AWAY from public pages (like login)
   if (isPublicPath && token) {
     return NextResponse.redirect(new URL('/dashboard', request.nextUrl));
   }
 
-  // 2. If user is NOT on a public path (trying to access dashboard/onboarding)
-  // AND has NO token, redirect them to login.
+  // 2. Redirect LOGGED-OUT users AWAY from protected pages
   if (!isPublicPath && !token) {
     return NextResponse.redirect(new URL('/login', request.nextUrl));
   }
+
+  return NextResponse.next();
 }
 
-// Configure which paths the middleware should run on
 export const config = {
   matcher: [
     '/login',
     '/signup',
-    '/dashboard',
-    '/onboarding', 
-    // Add other protected routes here if needed
+    '/dashboard/:path*', // Protect all dashboard routes
+    '/profile/:path*',   // Protect profile
+    '/settings/:path*',  // Protect settings
+    '/projects/:path*',  // Protect projects
+    '/onboarding'
   ]
 };

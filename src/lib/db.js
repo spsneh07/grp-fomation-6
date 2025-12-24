@@ -30,5 +30,4 @@ async function connectDB() {
   return cached.conn;
 }
 
-// ✅ THIS EXPORT LINE WAS MISSING OR WRONG:
 export default connectDB;

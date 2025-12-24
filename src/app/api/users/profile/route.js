@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
-// ✅ POST: Get User Profile (Used when page loads)
+// ✅ POST: Get User Profile
 export async function POST(request) {
   try {
     await connectDB();
@@ -21,7 +21,7 @@ export async function POST(request) {
   }
 }
 
-// ✅ PUT: Update User Profile (Used when you click Save)
+// ✅ PUT: Update User Profile
 export async function PUT(request) {
   try {
     await connectDB();
@@ -32,19 +32,20 @@ export async function PUT(request) {
       {
         name,
         bio,
-        skills,
+        skills, // Now accepts the array of objects because schema is updated
         experienceLevel,
         availability,
         jobTitle,
         socialLinks,
         avatarUrl
       },
-      { new: true } // Return the updated document
+      { new: true, runValidators: true } // runValidators ensures data matches schema
     );
 
     return NextResponse.json({ user: updatedUser, message: "Profile updated!" }, { status: 200 });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+    console.error("Profile Update Error:", error);
+    // Return the actual error message to help debugging
+    return NextResponse.json({ error: error.message || "Update failed" }, { status: 500 });
   }
 }

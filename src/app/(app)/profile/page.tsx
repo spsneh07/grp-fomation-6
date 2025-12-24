@@ -6,7 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Award, Book, Loader2, Edit3, Mail, Globe, Github, Linkedin } from 'lucide-react';
+import { 
+    User, Award, Book, Loader2, Edit3, Mail, Globe, Github, Linkedin, 
+    Briefcase, Clock, Calendar // ✅ Added new icons
+} from 'lucide-react';
 import { demoUser } from '@/lib/data';
 import Link from 'next/link';
 
@@ -85,9 +88,24 @@ export default function ProfilePage() {
                             </Button>
                         </div>
 
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground pt-1">
-                            <span className="flex items-center gap-1"><Mail className="w-4 h-4" /> {user.email}</span>
-                            <span className="px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground text-xs font-semibold">{user.experienceLevel || "Level 1 joined"}</span>
+                        {/* ✅ UPDATED: User Details Row */}
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground pt-2">
+                            <span className="flex items-center gap-1.5">
+                                <Mail className="w-3.5 h-3.5" /> 
+                                {user.email}
+                            </span>
+                            
+                            {/* Experience Level Badge */}
+                            <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-foreground text-xs font-medium border border-border flex items-center gap-1.5">
+                                <Briefcase className="w-3 h-3 text-primary" />
+                                {user.experienceLevel || "Beginner"}
+                            </span>
+
+                            {/* ✅ Availability Badge (New) */}
+                            <span className="px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 text-xs font-medium border border-green-200 dark:border-green-900 flex items-center gap-1.5">
+                                <Clock className="w-3 h-3" />
+                                {user.availability || "Part-time"}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -115,10 +133,29 @@ export default function ProfilePage() {
                             {user.skills && user.skills.length > 0 ? (
                                 <div className="flex flex-wrap gap-2">
                                     {user.skills.map((skill: any, index: number) => {
-                                        const skillName = typeof skill === 'string' ? skill : skill.name;
+                                        // Handle both legacy string format and new object format
+                                        const isObj = typeof skill !== 'string';
+                                        const skillName = isObj ? skill.name : skill;
+                                        const skillLevel = isObj ? skill.level : null;
+                                        const skillMode = isObj ? skill.mode : null;
+
                                         return (
-                                            <Badge key={index} variant="secondary" className="px-3 py-1 text-sm border-border/50 bg-background/50">
-                                                {skillName}
+                                            <Badge key={index} variant="secondary" className="pl-3 pr-2 py-1.5 text-sm border-border/50 bg-background/50 gap-2 items-center hover:bg-background/80 transition-colors">
+                                                <span>{skillName}</span>
+                                                
+                                                {/* ✅ Show Level (Beginner/Intermediate/Advanced) */}
+                                                {skillLevel && (
+                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase font-bold tracking-wider">
+                                                        {skillLevel}
+                                                    </span>
+                                                )}
+
+                                                {/* ✅ Show Expert Star */}
+                                                {skillMode === 'Expert' && (
+                                                    <div className="bg-yellow-500/10 p-0.5 rounded-full" title="Expert">
+                                                        <Award className="w-3 h-3 text-yellow-500" />
+                                                    </div>
+                                                )}
                                             </Badge>
                                         );
                                     })}

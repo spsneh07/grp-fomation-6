@@ -1,44 +1,52 @@
 import mongoose from "mongoose";
 
+// ✅ 1. Define Sub-schema for Skills
+const SkillSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  level: { type: String, default: "Beginner" },
+  mode: { type: String, default: "Learner" },
+  verification: {
+    type: { type: String, default: "Self-Declared" }, 
+    url: { type: String, default: "" }
+  }
+});
+
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-
-  // Password is not required for Google Login
   password: { type: String, required: false },
 
   // Profile Fields
-  avatarUrl: { type: String }, // Custom uploads
-  image: { type: String },     // Google Auth often uses 'image'
+  avatarUrl: { type: String }, 
+  image: { type: String },     
 
   jobTitle: { type: String, default: "" },
   bio: { type: String, default: "" },
 
-  // ✅ Added for Search Functionality
-  skills: { type: [String], default: [] },
+  // ✅ 2. Add Missing Fields
+  experienceLevel: { type: String, default: "Beginner" },
+  availability: { type: String, default: "Part-time" },
 
-  // Social Links
+  // ✅ 3. Use SkillSchema instead of [String]
+  skills: { type: [SkillSchema], default: [] },
+
   socialLinks: {
     github: { type: String, default: "" },
     linkedin: { type: String, default: "" },
     portfolio: { type: String, default: "" }
   },
 
-  // Preferences
   preferences: {
     projectInvites: { type: Boolean, default: true },
     newMatches: { type: Boolean, default: true },
     marketing: { type: Boolean, default: false }
   },
 
-  // Logic Flag
   hasCompletedOnboarding: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
 
-  // OTP Fields
   resetOtp: String,
   resetOtpExpire: Date,
 }, { timestamps: true });
 
-// Prevent model overwrite error in development
 export default mongoose.models.User || mongoose.model("User", UserSchema);

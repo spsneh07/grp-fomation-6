@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Line, LineChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Line, LineChart, ResponsiveContainer } from "recharts";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,11 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Sparkles, Loader2, BrainCircuit, Send, Clock, CheckCircle, XCircle, Inbox, Check, X, Search, Activity, Users, Layout, Zap } from 'lucide-react';
+import { Skeleton } from "@/components/ui/skeleton";
+import { Sparkles, Loader2, BrainCircuit, Send, Clock, CheckCircle, XCircle, Inbox, Check, X, Search, Users, Layout, Zap } from 'lucide-react';
 import { demoUser } from '@/lib/data';
 import Link from 'next/link';
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 // ... NoMatchSuggestions Component ...
 const NoMatchSuggestions = () => {
@@ -39,7 +39,7 @@ const dataSmall = [
     { value: 10 }, { value: 25 }, { value: 15 }, { value: 30 }, { value: 45 }, { value: 35 }, { value: 60 }
 ];
 
-const MetricCard = ({ title, value, subtext, icon: Icon, color, delay }: any) => (
+const MetricCard = ({ title, value, subtext, icon: Icon, color }: any) => (
     <div
         className="relative overflow-hidden rounded-2xl border border-border/50 dark:border-white/5 bg-card/80 dark:bg-white/5 p-6 backdrop-blur-xl transition-all shadow-sm dark:shadow-none"
     >
@@ -68,15 +68,38 @@ const MetricCard = ({ title, value, subtext, icon: Icon, color, delay }: any) =>
                 </div>
             </div>
         </div>
-
-        {/* Glow Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/40 dark:to-white/5 pointer-events-none" />
     </div>
 );
 
+// ✅ NEW: Skeleton Card for fast perceived loading
+const ProjectCardSkeleton = () => (
+    <Card className="flex flex-col h-full border-border/50 bg-card/80">
+        <CardHeader className="pb-3">
+            <div className="flex justify-between items-start gap-4">
+                <Skeleton className="h-6 w-3/4 rounded-md" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-1/2 rounded-md mt-2" />
+        </CardHeader>
+        <CardContent className="flex-grow pb-4">
+            <Skeleton className="h-4 w-full rounded-md mb-2" />
+            <Skeleton className="h-4 w-5/6 rounded-md mb-6" />
+            <div className="flex gap-2">
+                <Skeleton className="h-5 w-12 rounded-md" />
+                <Skeleton className="h-5 w-12 rounded-md" />
+                <Skeleton className="h-5 w-12 rounded-md" />
+            </div>
+        </CardContent>
+        <CardFooter>
+            <Skeleton className="h-10 w-full rounded-md" />
+        </CardFooter>
+    </Card>
+);
+
 export default function DashboardPage() {
     const router = useRouter();
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
 
     const [user, setUser] = useState(demoUser);
     const [projects, setProjects] = useState<any[]>([]);
@@ -85,16 +108,18 @@ export default function DashboardPage() {
 
     const [myRequests, setMyRequests] = useState<any[]>([]);
     const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    
+    // ✅ SPLIT LOADING STATES
+    const [isUserLoading, setIsUserLoading] = useState(true);
+    const [isProjectsLoading, setIsProjectsLoading] = useState(true);
+    const [isRequestsLoading, setIsRequestsLoading] = useState(true);
 
-    // Helper
     const getShortDescription = (fullDesc: string) => {
         if (!fullDesc) return "No description provided.";
         const [mainText] = fullDesc.split('---');
         return mainText.trim();
     };
 
-    // ✅ SEARCH FUNCTION
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         const query = e.target.value.toLowerCase();
         setSearchQuery(query);
@@ -111,10 +136,14 @@ export default function DashboardPage() {
         }
     };
 
+    // ✅ OPTIMIZED DATA FETCHING
     useEffect(() => {
+        if (status === "loading") return;
+
         let currentUserId: string | null = null;
         let currentUserData: any = null;
 
+        // 1. Get User ID (Session or LocalStorage)
         if (session?.user) {
             currentUserData = {
                 // @ts-ignore
@@ -134,66 +163,55 @@ export default function DashboardPage() {
             }
         }
 
+        // 2. Set User & STOP BLOCKING UI immediately
         if (currentUserData) {
-            if (currentUserData.hasCompletedOnboarding === false) {
-                router.push("/onboarding");
-                return;
-            }
             localStorage.setItem("user", JSON.stringify(currentUserData));
             setUser({ ...demoUser, ...currentUserData });
             currentUserId = currentUserData.id || currentUserData._id;
-        } else if (session === null) {
-            router.push("/login");
-            return;
+            setIsUserLoading(false); // <--- UI APPEARS HERE
+        } else {
+            setIsUserLoading(false); // Stop loading even if no user (Middleware handles redirect)
         }
 
-        const fetchAIProjects = async (id: string) => {
-            try {
-                const res = await fetch("/api/ai/match", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId: id }),
-                });
-                const data = await res.json();
+        // 3. Fetch Data in Background (Parallel)
+        if (currentUserId) {
+            // Fetch Projects (Usually Slowest)
+            fetch("/api/ai/match", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: currentUserId }),
+            })
+            .then(res => res.json())
+            .then(data => {
                 if (data.projects) {
                     setProjects(data.projects);
                     setFilteredProjects(data.projects);
                 }
-            } catch (error) { console.error(error); }
-        };
+            })
+            .catch(err => console.error(err))
+            .finally(() => setIsProjectsLoading(false));
 
-        const fetchMyRequests = async (id: string) => {
-            try {
-                const res = await fetch("/api/requests/user", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId: id }),
-                });
-                const data = await res.json();
+            // Fetch Requests (Fast)
+            const requestsPromise = fetch("/api/requests/user", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: currentUserId }),
+            }).then(res => res.json()).then(data => {
                 if (data.requests) setMyRequests(data.requests);
-            } catch (error) { console.error(error); }
-        };
+            });
 
-        const fetchIncomingRequests = async (id: string) => {
-            try {
-                const res = await fetch("/api/requests/owner", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId: id }),
-                });
-                const data = await res.json();
+            // Fetch Incoming (Fast)
+            const incomingPromise = fetch("/api/requests/owner", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: currentUserId }),
+            }).then(res => res.json()).then(data => {
                 if (data.requests) setIncomingRequests(data.requests);
-            } catch (error) { console.error(error); }
-        };
+            });
 
-        if (currentUserId) {
-            Promise.all([
-                fetchAIProjects(currentUserId),
-                fetchMyRequests(currentUserId),
-                fetchIncomingRequests(currentUserId)
-            ]).finally(() => setLoading(false));
+            Promise.all([requestsPromise, incomingPromise]).finally(() => setIsRequestsLoading(false));
         }
-    }, [router, session]);
+    }, [status, session]);
 
     const handleRequestAction = async (requestId: string, status: 'accepted' | 'rejected') => {
         try {
@@ -223,21 +241,17 @@ export default function DashboardPage() {
         }
     };
 
-    if (loading) return (
+    // Show initial loader ONLY for user check (very fast)
+    if (isUserLoading) return (
         <div className="flex h-screen items-center justify-center gap-2 text-muted-foreground">
-            <div>
-                <Loader2 className="h-6 w-6 text-primary animate-spin" />
-            </div>
-            <span className="text-lg font-medium">Loading Dashboard...</span>
+            <Loader2 className="h-6 w-6 text-primary animate-spin" />
         </div>
     );
 
     return (
         <div className="space-y-8 pb-10">
             {/* HEADER */}
-            <div
-                className="flex items-center justify-between"
-            >
+            <div className="flex items-center justify-between">
                 <div>
                     <h1 className="font-headline text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-white/60">Overview</h1>
                     <p className="text-muted-foreground mt-1 text-lg">Welcome back, {user.name?.split(' ')[0] || 'User'}. Here's what's happening.</p>
@@ -247,31 +261,28 @@ export default function DashboardPage() {
                 </Button>
             </div>
 
-            {/* HERO METRICS GRID */}
+            {/* HERO METRICS GRID (Shows Skeletons if Requests are loading) */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
                     title="Total Matches"
-                    value={projects.length}
+                    value={isProjectsLoading ? "-" : projects.length}
                     subtext="AI-recommended projects"
                     icon={BrainCircuit}
                     color="#8b5cf6"
-                    delay={0.1}
                 />
                 <MetricCard
                     title="Pending Requests"
-                    value={myRequests.filter(r => r.status === 'pending').length}
+                    value={isRequestsLoading ? "-" : myRequests.filter(r => r.status === 'pending').length}
                     subtext="Applications sent by you"
                     icon={Clock}
                     color="#eab308"
-                    delay={0.2}
                 />
                 <MetricCard
                     title="Inbox"
-                    value={incomingRequests.length}
+                    value={isRequestsLoading ? "-" : incomingRequests.length}
                     subtext="Incoming applications"
                     icon={Inbox}
                     color="#3b82f6"
-                    delay={0.3}
                 />
                 <MetricCard
                     title="Active Projects"
@@ -279,10 +290,8 @@ export default function DashboardPage() {
                     subtext="Projects managed by you"
                     icon={Layout}
                     color="#22c55e"
-                    delay={0.4}
                 />
 
-                {/* Network Link Card */}
                 <Link href="/network" className="block relative overflow-hidden rounded-2xl border border-border/50 dark:border-white/5 bg-card/80 dark:bg-white/5 p-6 backdrop-blur-xl transition-all shadow-sm dark:shadow-none hover:bg-card/90 dark:hover:bg-white/10 group">
                     <div className="flex items-center gap-2 mb-2">
                         <div className="p-2 rounded-lg bg-pink-500/10 text-pink-500">
@@ -298,7 +307,6 @@ export default function DashboardPage() {
             </div>
 
             <Tabs defaultValue="projects" className="space-y-8">
-
                 {/* TAB LIST + SEARCH */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 border-b border-border/40 pb-6">
                     <TabsList className="bg-secondary/40 dark:bg-white/5 p-1 h-auto rounded-full border border-border/40 dark:border-white/5 backdrop-blur-md">
@@ -323,14 +331,18 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* === AI PROJECTS TAB === */}
+                {/* === AI PROJECTS TAB (With Skeletons) === */}
                 <TabsContent value="projects" className="space-y-6">
-                    {filteredProjects.length > 0 ? (
+                    {isProjectsLoading ? (
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            <ProjectCardSkeleton />
+                            <ProjectCardSkeleton />
+                            <ProjectCardSkeleton />
+                        </div>
+                    ) : filteredProjects.length > 0 ? (
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                             {filteredProjects.map((project, index) => (
-                                <div
-                                    key={project._id || index}
-                                >
+                                <div key={project._id || index}>
                                     <Card className="flex flex-col h-full border-border/50 dark:border-white/5 bg-card/80 dark:bg-white/5 hover:bg-card/100 dark:hover:bg-white/10 backdrop-blur-md transition-all duration-300 group hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 overflow-hidden relative shadow-sm dark:shadow-none">
                                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
@@ -375,15 +387,16 @@ export default function DashboardPage() {
                     )}
                 </TabsContent>
 
-                {/* ... other tabs (Requests/Inbox) ... */}
-
+                {/* === SENT REQUESTS TAB === */}
                 <TabsContent value="requests" className="mt-4">
                     <Card className="border-border/50 dark:border-white/5 bg-card/80 dark:bg-white/5 backdrop-blur-xl shadow-sm dark:shadow-none">
                         <CardHeader>
                             <CardTitle className="font-headline flex items-center gap-2"><Send className="h-5 w-5 text-yellow-500" /> Sent Applications</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            {myRequests.length === 0 ? (
+                            {isRequestsLoading ? (
+                                <div className="flex justify-center py-8"><Loader2 className="animate-spin text-primary" /></div>
+                            ) : myRequests.length === 0 ? (
                                 <div className="text-center py-12 text-muted-foreground">
                                     <p>You haven't applied to any projects yet.</p>
                                     <Button variant="link" asChild className="text-primary"><Link href="/projects/new">Find a project</Link></Button>
@@ -412,6 +425,7 @@ export default function DashboardPage() {
                     </Card>
                 </TabsContent>
 
+                {/* === INCOMING REQUESTS TAB === */}
                 <TabsContent value="inbox" className="mt-4">
                     <Card className="border-border/50 dark:border-white/5 bg-card/80 dark:bg-white/5 backdrop-blur-xl shadow-sm dark:shadow-none">
                         <CardHeader>
@@ -420,7 +434,9 @@ export default function DashboardPage() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            {incomingRequests.length > 0 ? (
+                            {isRequestsLoading ? (
+                                <div className="flex justify-center py-8"><Loader2 className="animate-spin text-primary" /></div>
+                            ) : incomingRequests.length > 0 ? (
                                 <div className="space-y-4">
                                     {incomingRequests.map((req) => (
                                         <div key={req._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border/50 dark:border-white/10 bg-secondary/30 dark:bg-black/20 hover:border-primary/30 transition-all gap-4 group">

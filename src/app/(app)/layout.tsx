@@ -30,7 +30,6 @@ import {
   Search,
   User,
   ChevronsUpDown,
-  Bell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -55,12 +54,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const { data: session } = useSession();
 
-  // Normalize user data
-  const user = {
+  // ✅ 1. Initialize State with Session Data (Fast Load)
+  const [currentUser, setCurrentUser] = React.useState({
     name: session?.user?.name || demoUser.name,
     email: session?.user?.email || demoUser.email,
     avatar: session?.user?.image || demoUser.avatarUrl,
-  };
+  });
 
   const [isMounted, setIsMounted] = React.useState(false);
 
@@ -68,8 +67,36 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setIsMounted(true);
   }, []);
 
+  // ✅ 2. Listen for Profile Updates (The "Everywhere" Fix)
   React.useEffect(() => {
-    // Redirect to onboarding if not completed
+    const syncUser = () => {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setCurrentUser(prev => ({
+            ...prev,
+            name: parsed.name || prev.name,
+            email: parsed.email || prev.email,
+            // Check 'avatarUrl' (from DB) first, then 'image' (from Google), then fallback
+            avatar: parsed.avatarUrl || parsed.image || prev.avatar 
+          }));
+        } catch (e) {
+          console.error("Error syncing user data:", e);
+        }
+      }
+    };
+
+    // Run on mount
+    syncUser();
+
+    // Listen for the custom event dispatched by Edit Profile page
+    window.addEventListener("user-updated", syncUser);
+
+    return () => window.removeEventListener("user-updated", syncUser);
+  }, []);
+
+  React.useEffect(() => {
     if (session?.user && (session.user as any).hasCompletedOnboarding === false) {
       router.push("/onboarding");
     }
@@ -84,8 +111,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/search', label: 'Search Profiles', icon: Search },
     { href: '/projects', label: 'My Projects', icon: FolderKanban },
-    { href: '/projects/new', label: 'Create Project', icon: FilePlus2 },
-    { href: '/settings', label: 'Settings', icon: Settings },
   ];
 
   const rootPages = ['/dashboard', '/projects', '/settings', '/profile', '/search'];
@@ -93,8 +118,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      {/* Global Mesh Gradient Background */}
-      {/* Global Mesh Gradient Background */}
       <div className="fixed inset-0 bg-background -z-50" />
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50/50 via-white to-white dark:from-slate-900 dark:via-[#0a0a0f] dark:to-black -z-50" />
       <div className="fixed inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-40" />
@@ -144,15 +167,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       size="lg"
                       className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-white/5 transition-colors border border-transparent hover:border-border/20 dark:hover:border-white/5"
                     >
+                      {/* ✅ 3. Use currentUser instead of static 'user' */}
                       <Avatar className="h-9 w-9 rounded-lg border border-border/50 dark:border-white/10 ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
-                        <AvatarImage src={user.avatar || ''} alt={user.name || ''} />
+                        <AvatarImage src={currentUser.avatar || ''} alt={currentUser.name || ''} />
                         <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-medium">
-                          {user.name ? user.name.charAt(0) : 'U'}
+                          {currentUser.name ? currentUser.name.charAt(0) : 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="grid flex-1 text-left text-sm leading-tight ml-2">
-                        <span className="truncate font-semibold">{user.name}</span>
-                        <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                        <span className="truncate font-semibold">{currentUser.name}</span>
+                        <span className="truncate text-xs text-muted-foreground">{currentUser.email}</span>
                       </div>
                       <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
                     </SidebarMenuButton>
@@ -166,14 +190,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <DropdownMenuLabel className="p-0 font-normal">
                       <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                         <Avatar className="h-8 w-8 rounded-lg">
-                          <AvatarImage src={user.avatar || ''} alt={user.name || ''} />
+                          <AvatarImage src={currentUser.avatar || ''} alt={currentUser.name || ''} />
                           <AvatarFallback className="rounded-lg">
-                            {user.name ? user.name.charAt(0) : 'U'}
+                            {currentUser.name ? currentUser.name.charAt(0) : 'U'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="grid flex-1 text-left text-sm leading-tight">
-                          <span className="truncate font-semibold">{user.name}</span>
-                          <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                          <span className="truncate font-semibold">{currentUser.name}</span>
+                          <span className="truncate text-xs text-muted-foreground">{currentUser.email}</span>
                         </div>
                       </div>
                     </DropdownMenuLabel>
@@ -236,7 +260,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
       </SidebarInset>
 
-      {/* AI Chatbot - Available on all pages */}
       <SynergyHelp />
     </SidebarProvider>
   );

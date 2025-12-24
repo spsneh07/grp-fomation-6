@@ -1,4 +1,4 @@
-"use client"; // Required for client-side logic (hooks)
+"use client"; 
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -7,13 +7,11 @@ import Link from "next/link";
 export default function LoginForm() {
   const router = useRouter();
   
-  // State for form data
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  // State for UI feedback
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -43,19 +41,16 @@ export default function LoginForm() {
         return;
       }
 
-      // ✅ THE CRITICAL REDIRECT LOGIC
+      // ✅ FIX: Save user data to LocalStorage so Sidebar can read it
+      localStorage.setItem("user", JSON.stringify(data.user));
+
       // Check the flag sent from the backend
       if (data.user.hasCompletedOnboarding === false) {
-        // New User -> Go to Setup
         router.push("/onboarding"); 
       } else {
-        // Returning User -> Go to Dashboard
         router.push("/dashboard");
       }
       
-      // Note: We don't set loading(false) here because the page is redirecting,
-      // keeping it true prevents the user from clicking again.
-
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again.");
@@ -124,7 +119,7 @@ export default function LoginForm() {
 
       <div className="text-sm text-center text-gray-500">
         Don't have an account?{" "}
-        <Link href="/register" className="text-blue-600 hover:underline">
+        <Link href="/signup" className="text-blue-600 hover:underline">
           Sign up
         </Link>
       </div>
