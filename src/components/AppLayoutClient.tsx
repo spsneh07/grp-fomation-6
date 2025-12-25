@@ -43,15 +43,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import NotificationBell from '@/components/ui/NotificationBell';
 import SynergyHelp from '@/components/SynergyHelp';
-
-// Fallback data
 import { demoUser } from '@/lib/data';
 
-function AppLayoutMain({ children }: { children: React.ReactNode }) {
+function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isActive = (path: string) => pathname === path;
-  
   const { state, toggleSidebar } = useSidebar();
   const { data: session } = useSession();
 
@@ -110,9 +107,6 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
   const rootPages = ['/dashboard', '/projects', '/settings', '/profile', '/search'];
   const showBackButton = !rootPages.includes(pathname);
 
-  // Prevent hydration mismatch for the Back button
-  if (!isMounted) return null;
-
   return (
     <>
       <div className="fixed inset-0 bg-background -z-50" />
@@ -168,60 +162,70 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
         <SidebarFooter className="p-4 border-t border-border/50 dark:border-white/5">
           <SidebarMenu>
             <SidebarMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton
-                    size="lg"
-                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-white/5 transition-colors border border-transparent hover:border-border/20 dark:hover:border-white/5 overflow-hidden"
-                  >
-                    <Avatar className="h-9 w-9 rounded-lg border border-border/50 dark:border-white/10 ring-2 ring-transparent group-hover:ring-primary/20 transition-all shrink-0">
-                      <AvatarImage src={currentUser.avatar || ''} alt={currentUser.name || ''} />
-                      <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-medium">
-                        {currentUser.name ? currentUser.name.charAt(0) : 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="grid flex-1 text-left text-sm leading-tight ml-2 transition-all duration-300 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0 overflow-hidden">
-                      <span className="truncate font-semibold">{currentUser.name}</span>
-                      <span className="truncate text-xs text-muted-foreground">{currentUser.email}</span>
-                    </div>
-                    <ChevronsUpDown className="ml-auto size-4 text-muted-foreground shrink-0 transition-all duration-300 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0" />
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl border-border/50 dark:border-white/10 bg-popover/80 dark:bg-black/80 backdrop-blur-xl shadow-2xl"
-                  side="bottom"
-                  align="end"
-                  sideOffset={4}
-                >
-                    <DropdownMenuLabel className="p-0 font-normal">
-                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                      <Avatar className="h-8 w-8 rounded-lg">
+              {isMounted ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton
+                      size="lg"
+                      className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-white/5 transition-colors border border-transparent hover:border-border/20 dark:hover:border-white/5 overflow-hidden"
+                    >
+                      <Avatar className="h-9 w-9 rounded-lg border border-border/50 dark:border-white/10 ring-2 ring-transparent group-hover:ring-primary/20 transition-all shrink-0">
                         <AvatarImage src={currentUser.avatar || ''} alt={currentUser.name || ''} />
-                        <AvatarFallback className="rounded-lg">
+                        <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-medium">
                           {currentUser.name ? currentUser.name.charAt(0) : 'U'}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="grid flex-1 text-left text-sm leading-tight">
+                      <div className="grid flex-1 text-left text-sm leading-tight ml-2 transition-all duration-300 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0 overflow-hidden">
                         <span className="truncate font-semibold">{currentUser.name}</span>
                         <span className="truncate text-xs text-muted-foreground">{currentUser.email}</span>
                       </div>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-border/50 dark:bg-white/10" />
-                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-primary/10 focus:text-primary">
-                    <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="cursor-pointer focus:bg-primary/10 focus:text-primary">
-                    <Link href="/settings"><Settings className="mr-2 h-4 w-4" />Settings</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-border/50 dark:bg-white/10" />
+                      <ChevronsUpDown className="ml-auto size-4 text-muted-foreground shrink-0 transition-all duration-300 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0" />
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl border-border/50 dark:border-white/10 bg-popover/80 dark:bg-black/80 backdrop-blur-xl shadow-2xl"
+                    side="bottom"
+                    align="end"
+                    sideOffset={4}
+                  >
+                     <DropdownMenuLabel className="p-0 font-normal">
+                      <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                        <Avatar className="h-8 w-8 rounded-lg">
+                          <AvatarImage src={currentUser.avatar || ''} alt={currentUser.name || ''} />
+                          <AvatarFallback className="rounded-lg">
+                            {currentUser.name ? currentUser.name.charAt(0) : 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="grid flex-1 text-left text-sm leading-tight">
+                          <span className="truncate font-semibold">{currentUser.name}</span>
+                          <span className="truncate text-xs text-muted-foreground">{currentUser.email}</span>
+                        </div>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-border/50 dark:bg-white/10" />
+                    <DropdownMenuItem asChild className="cursor-pointer focus:bg-primary/10 focus:text-primary">
+                      <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer focus:bg-primary/10 focus:text-primary">
+                      <Link href="/settings"><Settings className="mr-2 h-4 w-4" />Settings</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-border/50 dark:bg-white/10" />
 
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-700 dark:focus:text-red-400 focus:bg-red-50 dark:focus:bg-red-950/30">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-700 dark:focus:text-red-400 focus:bg-red-50 dark:focus:bg-red-950/30">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <SidebarMenuButton size="lg" className="animate-pulse">
+                  <div className="h-8 w-8 rounded-lg bg-white/5" />
+                  <div className="grid flex-1 gap-1 ml-2 group-data-[collapsible=icon]:hidden">
+                    <div className="h-3 w-16 rounded bg-white/5" />
+                    <div className="h-3 w-24 rounded bg-white/5" />
+                  </div>
+                </SidebarMenuButton>
+              )}
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
@@ -229,7 +233,6 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
 
       <SidebarInset className="bg-transparent">
         <header className="flex h-16 items-center gap-4 border-b border-border/50 dark:border-white/5 bg-background/40 backdrop-blur-md px-4 md:px-6 sticky top-0 z-30 transition-all">
-          
           {showBackButton && (
             <Button
               variant="ghost"
@@ -245,8 +248,17 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
           <div className="flex-1" />
 
           <div className="flex items-center gap-3">
-            <ModeToggle />
-            <NotificationBell />
+            {isMounted ? (
+              <>
+                <ModeToggle />
+                <NotificationBell />
+              </>
+            ) : (
+              <>
+                 <div className="h-10 w-10 rounded-md bg-muted/20 animate-pulse" />
+                 <div className="h-10 w-10 rounded-md bg-muted/20 animate-pulse" />
+              </>
+            )}
           </div>
         </header>
 
@@ -260,10 +272,10 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default function AppLayoutClient({ children, defaultOpen }: { children: React.ReactNode, defaultOpen: boolean }) {
   return (
-    <SidebarProvider>
-      <AppLayoutMain>{children}</AppLayoutMain>
+    <SidebarProvider defaultOpen={defaultOpen}>
+      <AppLayoutContent>{children}</AppLayoutContent>
     </SidebarProvider>
   );
 }
