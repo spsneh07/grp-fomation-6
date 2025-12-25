@@ -108,7 +108,7 @@ export default function DashboardPage() {
 
     const [myRequests, setMyRequests] = useState<any[]>([]);
     const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
-    
+
     // ✅ SPLIT LOADING STATES
     const [isUserLoading, setIsUserLoading] = useState(true);
     const [isProjectsLoading, setIsProjectsLoading] = useState(true);
@@ -181,15 +181,15 @@ export default function DashboardPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: currentUserId }),
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.projects) {
-                    setProjects(data.projects);
-                    setFilteredProjects(data.projects);
-                }
-            })
-            .catch(err => console.error(err))
-            .finally(() => setIsProjectsLoading(false));
+                .then(res => res.json())
+                .then(data => {
+                    if (data.projects) {
+                        setProjects(data.projects);
+                        setFilteredProjects(data.projects);
+                    }
+                })
+                .catch(err => console.error(err))
+                .finally(() => setIsProjectsLoading(false));
 
             // Fetch Requests (Fast)
             const requestsPromise = fetch("/api/requests/user", {
@@ -292,18 +292,7 @@ export default function DashboardPage() {
                     color="#22c55e"
                 />
 
-                <Link href="/network" className="block relative overflow-hidden rounded-2xl border border-border/50 dark:border-white/5 bg-card/80 dark:bg-white/5 p-6 backdrop-blur-xl transition-all shadow-sm dark:shadow-none hover:bg-card/90 dark:hover:bg-white/10 group">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div className="p-2 rounded-lg bg-pink-500/10 text-pink-500">
-                            <Users className="h-5 w-5" />
-                        </div>
-                        <span className="text-sm font-medium text-muted-foreground">My Network</span>
-                    </div>
-                    <div className="mt-4">
-                        <h3 className="font-headline text-xl font-bold tracking-tight group-hover:text-primary transition-colors">Grow your network</h3>
-                        <p className="text-xs text-muted-foreground mt-1">Connect with other developers</p>
-                    </div>
-                </Link>
+
             </div>
 
             <Tabs defaultValue="projects" className="space-y-8">
@@ -351,7 +340,7 @@ export default function DashboardPage() {
                                                 <CardTitle className="font-headline text-xl line-clamp-1 group-hover:text-primary transition-colors">{project.title}</CardTitle>
                                                 <Badge variant="outline" className="shrink-0 border-border/40 dark:border-white/10 bg-secondary/50 dark:bg-black/20 backdrop-blur-md">{project.techStack?.[0] || "Tech"}</Badge>
                                             </div>
-                                            <CardDescription>by <span className="font-medium text-foreground">{project.owner?.name}</span></CardDescription>
+                                            <div className="text-xs text-muted-foreground mt-1">by <span className="font-medium text-foreground">{project.owner?.name || "Unknown"}</span></div>
                                         </CardHeader>
 
                                         <CardContent className="flex-grow pb-4 relative z-10">

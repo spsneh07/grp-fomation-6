@@ -29,6 +29,7 @@ import {
   ArrowLeft,
   Search,
   User,
+  Users,
   ChevronsUpDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -74,7 +75,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             ...prev,
             name: parsed.name || prev.name,
             email: parsed.email || prev.email,
-            avatar: parsed.avatarUrl || parsed.image || prev.avatar 
+            avatar: parsed.avatarUrl || parsed.image || prev.avatar
           }));
         } catch (e) {
           console.error("Error syncing user data:", e);
@@ -102,6 +103,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/search', label: 'Search Profiles', icon: Search },
     { href: '/projects', label: 'My Projects', icon: FolderKanban },
+    { href: '/network', label: 'My Network', icon: Users },
   ];
 
   const rootPages = ['/dashboard', '/projects', '/settings', '/profile', '/search'];
@@ -117,7 +119,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       <Sidebar collapsible="icon" className="border-r border-border/50 dark:border-white/5 bg-sidebar/30 backdrop-blur-2xl">
         <SidebarHeader className="border-b border-border/50 dark:border-white/5 px-4 py-4 group-data-[collapsible=icon]:px-2 transition-[padding] duration-300 ease-in-out">
           <div className="flex w-full items-center justify-between group-data-[collapsible=icon]:justify-center transition-all duration-300">
-            <div 
+            <div
               className="flex items-center gap-2 overflow-hidden transition-all duration-300 cursor-pointer"
               onClick={() => state === 'collapsed' && toggleSidebar()}
               title={state === 'collapsed' ? "Expand Sidebar" : "SynergyHub AI"}
@@ -188,7 +190,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                     align="end"
                     sideOffset={4}
                   >
-                     <DropdownMenuLabel className="p-0 font-normal">
+                    <DropdownMenuLabel className="p-0 font-normal">
                       <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                         <Avatar className="h-8 w-8 rounded-lg">
                           <AvatarImage src={currentUser.avatar || ''} alt={currentUser.name || ''} />
@@ -255,8 +257,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               </>
             ) : (
               <>
-                 <div className="h-10 w-10 rounded-md bg-muted/20 animate-pulse" />
-                 <div className="h-10 w-10 rounded-md bg-muted/20 animate-pulse" />
+                <div className="h-10 w-10 rounded-md bg-muted/20 animate-pulse" />
+                <div className="h-10 w-10 rounded-md bg-muted/20 animate-pulse" />
               </>
             )}
           </div>

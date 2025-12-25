@@ -16,7 +16,7 @@ export async function POST(request) {
     const allProjects = await Project.find({
       owner: { $ne: userId },
       'team.user': { $ne: userId }
-    }).lean();
+    }).populate('owner', 'name avatarUrl').lean();
 
     console.log('✅ MATCH API: Returning', allProjects.length, 'projects (no AI)');
     return NextResponse.json({ projects: allProjects, mock: true }, { status: 200 });

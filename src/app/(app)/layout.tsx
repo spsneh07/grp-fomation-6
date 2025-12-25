@@ -29,6 +29,7 @@ import {
   ArrowLeft,
   Search,
   User,
+  Users,
   ChevronsUpDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -51,7 +52,7 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isActive = (path: string) => pathname === path;
-  
+
   const { state, toggleSidebar } = useSidebar();
   const { data: session } = useSession();
 
@@ -77,7 +78,7 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
             ...prev,
             name: parsed.name || prev.name,
             email: parsed.email || prev.email,
-            avatar: parsed.avatarUrl || parsed.image || prev.avatar 
+            avatar: parsed.avatarUrl || parsed.image || prev.avatar
           }));
         } catch (e) {
           console.error("Error syncing user data:", e);
@@ -105,6 +106,7 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/search', label: 'Search Profiles', icon: Search },
     { href: '/projects', label: 'My Projects', icon: FolderKanban },
+    { href: '/network', label: 'My Network', icon: Users },
   ];
 
   const rootPages = ['/dashboard', '/projects', '/settings', '/profile', '/search'];
@@ -123,7 +125,7 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
       <Sidebar collapsible="icon" className="border-r border-border/50 dark:border-white/5 bg-sidebar/30 backdrop-blur-2xl">
         <SidebarHeader className="border-b border-border/50 dark:border-white/5 px-4 py-4 group-data-[collapsible=icon]:px-2 transition-[padding] duration-300 ease-in-out">
           <div className="flex w-full items-center justify-between group-data-[collapsible=icon]:justify-center transition-all duration-300">
-            <div 
+            <div
               className="flex items-center gap-2 overflow-hidden transition-all duration-300 cursor-pointer"
               onClick={() => state === 'collapsed' && toggleSidebar()}
               title={state === 'collapsed' ? "Expand Sidebar" : "SynergyHub AI"}
@@ -193,7 +195,7 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
                   align="end"
                   sideOffset={4}
                 >
-                    <DropdownMenuLabel className="p-0 font-normal">
+                  <DropdownMenuLabel className="p-0 font-normal">
                     <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                       <Avatar className="h-8 w-8 rounded-lg">
                         <AvatarImage src={currentUser.avatar || ''} alt={currentUser.name || ''} />
@@ -229,7 +231,7 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
 
       <SidebarInset className="bg-transparent">
         <header className="flex h-16 items-center gap-4 border-b border-border/50 dark:border-white/5 bg-background/40 backdrop-blur-md px-4 md:px-6 sticky top-0 z-30 transition-all">
-          
+
           {showBackButton && (
             <Button
               variant="ghost"

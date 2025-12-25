@@ -171,9 +171,9 @@ export default function UserProfilePage() {
                                         </Button>
                                     )}
                                     {connectionStatus === 'pending' && (
-                                        <Button disabled variant="secondary" className="gap-2">
-                                            <Loader2 className="w-4 h-4 animate-spin" /> Pending
-                                        </Button>
+                                        <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 py-1.5 px-3 text-sm h-10 flex items-center">
+                                            <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Request Pending
+                                        </Badge>
                                     )}
                                     {connectionStatus === 'received' && (
                                         <div className="flex gap-2">

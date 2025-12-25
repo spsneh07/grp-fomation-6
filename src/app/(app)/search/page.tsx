@@ -6,23 +6,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Search, Loader2, UserPlus, MapPin, Briefcase, Sparkles, Zap, Brain } from "lucide-react";
+import { Search, Loader2, UserPlus, MapPin, Briefcase, Sparkles, Zap, Brain, FolderKanban } from "lucide-react";
 import Link from "next/link";
 // import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"; // WAIT, I don't want to replace tabs import. I want to remove line 12.
 // Line 12 is: // import { motion, AnimatePresence } from "framer-motion";
 // I will just replace it with empty string or nothing? replace_file_content replaces the target.
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProjectCard } from "@/components/project-card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useSearchParams } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-type SearchMode = 'basic' | 'smart';
+type SearchMode = 'basic' | 'smart' | 'projects';
 
 export default function SearchProfilesPage() {
+    const searchParams = useSearchParams();
+    const typeParam = searchParams.get('type');
+
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [debouncedQuery, setDebouncedQuery] = useState("");
-    const [mode, setMode] = useState<SearchMode>('basic');
+    const [mode, setMode] = useState<SearchMode>((typeParam === 'projects' ? 'projects' : 'basic') as SearchMode);
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -44,10 +49,19 @@ export default function SearchProfilesPage() {
 
         setLoading(true);
         try {
-            const endpoint = mode === 'smart' ? '/api/users/search/smart' : '/api/users/search';
+            let endpoint = '';
+            if (mode === 'smart') endpoint = '/api/users/search/smart';
+            else if (mode === 'projects') endpoint = '/api/projects/search';
+            else endpoint = '/api/users/search';
+
             const res = await fetch(`${endpoint}?q=${encodeURIComponent(debouncedQuery)}`);
             const data = await res.json();
-            setResults(data.users || []);
+
+            if (mode === 'projects') {
+                setResults(data.projects || []);
+            } else {
+                setResults(data.users || []);
+            }
         } catch (error) {
             console.error("Search failed", error);
         } finally {
@@ -71,7 +85,11 @@ export default function SearchProfilesPage() {
                         <div className="relative flex-grow">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                             <Input
-                                placeholder={mode === 'smart' ? "Describe who you're looking for (e.g. 'React dev who knows AI')..." : "Search by name, skill, or role..."}
+                                placeholder={
+                                    mode === 'smart' ? "Describe who you're looking for..." :
+                                        mode === 'projects' ? "Search projects by title, stack, or type..." :
+                                            "Search by name, skill, or role..."
+                                }
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 className="pl-10 h-12 bg-muted/50 border-input/50 focus:bg-background transition-all"
@@ -79,9 +97,10 @@ export default function SearchProfilesPage() {
                         </div>
                     </div>
 
-                    <Tabs defaultValue="basic" onValueChange={(v) => setMode(v as SearchMode)} className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
+                    <Tabs value={mode} onValueChange={(v) => setMode(v as SearchMode)} className="w-full">
+                        <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="basic">Basic Search</TabsTrigger>
+                            <TabsTrigger value="projects"><FolderKanban className="w-3 h-3 mr-2" /> Projects</TabsTrigger>
                             <TabsTrigger value="smart" className="text-primary"><Sparkles className="w-3 h-3 mr-2" /> AI Smart Match</TabsTrigger>
                         </TabsList>
                     </Tabs>
@@ -98,45 +117,46 @@ export default function SearchProfilesPage() {
                         <p className="text-muted-foreground">Searching network...</p>
                     </div>
                 ) : results.length > 0 ? (
-                    results.map((user) => (
-                        <div
-                            key={user._id}
-                            className="h-full"
-                        >
-                            <Card className="h-full hover:shadow-lg transition-all hover:border-primary/30 group bg-card/50 backdrop-blur-sm">
-                                <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                                    <Avatar className="h-12 w-12 border-2 border-background ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
-                                        <AvatarImage src={user.avatarUrl} />
-                                        <AvatarFallback className="bg-primary/5 text-primary font-bold">{user.name?.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="min-w-0">
-                                        <CardTitle className="text-lg font-bold truncate group-hover:text-primary transition-colors">{user.name}</CardTitle>
-                                        <CardDescription className="truncate">{user.jobTitle || "Member"}</CardDescription>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    {user.bio && <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">{user.bio}</p>}
+                    results.map((item) => (
+                        <div key={item._id} className="h-full animate-in fade-in duration-500">
+                            {mode === 'projects' ? (
+                                <ProjectCard project={item} />
+                            ) : (
+                                <Card className="h-full hover:shadow-lg transition-all hover:border-primary/30 group bg-card/50 backdrop-blur-sm">
+                                    <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                                        <Avatar className="h-12 w-12 border-2 border-background ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
+                                            <AvatarImage src={item.avatarUrl} />
+                                            <AvatarFallback className="bg-primary/5 text-primary font-bold">{item.name?.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="min-w-0">
+                                            <CardTitle className="text-lg font-bold truncate group-hover:text-primary transition-colors">{item.name}</CardTitle>
+                                            <CardDescription className="truncate">{item.jobTitle || "Member"}</CardDescription>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {item.bio && <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">{item.bio}</p>}
 
-                                    <div className="flex flex-wrap gap-1.5 h-[52px] overflow-hidden content-start">
-                                        {user.skills?.slice(0, 4).map((skill: any, i: number) => (
-                                            <Badge key={i} variant="secondary" className="px-2 py-0.5 text-xs bg-secondary/50">{typeof skill === 'string' ? skill : skill.name}</Badge>
-                                        ))}
-                                        {user.skills?.length > 4 && <Badge variant="outline" className="text-xs">+{user.skills.length - 4}</Badge>}
-                                    </div>
+                                        <div className="flex flex-wrap gap-1.5 h-[52px] overflow-hidden content-start">
+                                            {item.skills?.slice(0, 4).map((skill: any, i: number) => (
+                                                <Badge key={i} variant="secondary" className="px-2 py-0.5 text-xs bg-secondary/50">{typeof skill === 'string' ? skill : skill.name}</Badge>
+                                            ))}
+                                            {item.skills?.length > 4 && <Badge variant="outline" className="text-xs">+{item.skills.length - 4}</Badge>}
+                                        </div>
 
-                                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-auto pt-2">
-                                        <div className="flex items-center gap-1"><Briefcase className="w-3 h-3" /> {user.experienceLevel || "Beginner"}</div>
-                                        <div className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {user.location || "Remote"}</div>
-                                    </div>
-                                </CardContent>
-                                <CardFooter>
-                                    <Button className="w-full gap-2 shadow-lg shadow-primary/5 group-hover:shadow-primary/20 transition-all" asChild>
-                                        <Link href={`/users/${user._id}`}>
-                                            <UserPlus className="w-4 h-4" /> View Profile
-                                        </Link>
-                                    </Button>
-                                </CardFooter>
-                            </Card>
+                                        <div className="flex items-center gap-4 text-xs text-muted-foreground mt-auto pt-2">
+                                            <div className="flex items-center gap-1"><Briefcase className="w-3 h-3" /> {item.experienceLevel || "Beginner"}</div>
+                                            <div className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {item.location || "Remote"}</div>
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter>
+                                        <Button className="w-full gap-2 shadow-lg shadow-primary/5 group-hover:shadow-primary/20 transition-all" asChild>
+                                            <Link href={`/users/${item._id}`}>
+                                                <UserPlus className="w-4 h-4" /> View Profile
+                                            </Link>
+                                        </Button>
+                                    </CardFooter>
+                                </Card>
+                            )}
                         </div>
                     ))
                 ) : (
@@ -156,7 +176,7 @@ export default function SearchProfilesPage() {
                         <Brain className="w-10 h-10 text-muted-foreground" />
                     </div>
                     <h2 className="text-xl font-semibold">Start Exploring</h2>
-                    <p className="max-w-md mx-auto text-muted-foreground">Search for skills like "React", "Python", or roles like "Designer". Try Smart Match to find people by description.</p>
+                    <p className="max-w-md mx-auto text-muted-foreground">Search for skills like "React", "Python", or roles like "Designer". Try Smart Match to find people by description, or browse Projects.</p>
                 </div>
             )}
         </div>
