@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { 
-  X, PlusCircle, Book, Award, Loader2, ArrowLeft, 
+  X, PlusCircle, Book, Award, Loader2, 
   Github, Linkedin, Globe, Image as ImageIcon, ChevronDown 
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -240,11 +240,7 @@ export default function EditProfilePage() {
   return (
     <div className="max-w-4xl mx-auto py-10 px-4 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/profile">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
+        {/* ❌ REMOVED: Redundant Back Button */}
         <div>
           <h1 className="font-headline text-3xl font-bold">Edit Profile</h1>
           <p className="text-muted-foreground">Update your public profile and skills.</p>
@@ -291,7 +287,6 @@ export default function EditProfilePage() {
                                 <Button type="button" variant="ghost" size="sm" className="text-destructive" onClick={() => setFormData(prev => ({ ...prev, avatarUrl: "" }))}>Remove</Button>
                             )}
                         </div>
-                        {/* ✅ REMOVED: Text input box for direct URL paste */}
                     </div>
                 </div>
             </div>

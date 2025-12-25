@@ -17,7 +17,8 @@ import {
     Send, Users, MessageSquare, Layout, Loader2,
     Plus, MoreVertical, Flag, User as UserIcon,
     Trash2, Calendar as CalendarIcon, Tag, CheckCheck,
-    Reply, Edit2, X, Code, FileUp, Image as ImageIcon, Github, Sparkles, ChevronDown
+    Reply, Edit2, X, Code, FileUp, Image as ImageIcon, Github, Sparkles, ChevronDown,
+    Video
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from "sonner";
@@ -331,7 +332,6 @@ export default function CollaboratePage() {
                         <span className="font-semibold text-sm">{title}</span>
                         <Badge variant="secondary" className="ml-1 px-1.5 h-5 text-[10px]">{columnTasks.length}</Badge>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-background/80" onClick={() => handleCreateTask(status)}><Plus className="h-4 w-4" /></Button>
                 </div>
                 <div className="p-3 flex-grow space-y-3 overflow-y-auto custom-scrollbar">
                     {columnTasks.map(task => {
@@ -442,19 +442,30 @@ export default function CollaboratePage() {
 
                 // === WORKSPACE VIEW ===
                 <div className="flex-grow flex flex-col overflow-hidden w-full max-w-[1600px] mx-auto">
-                    <Tabs defaultValue="chat" className="h-full flex flex-col">
+                    {/* ✅ UPDATED TABS DEFAULT VALUE */}
+                    <Tabs defaultValue="board" className="h-full flex flex-col">
                         <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent space-x-6">
-                            <TabsTrigger value="chat" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-muted-foreground hover:text-foreground transition-all gap-2"><MessageSquare className="w-4 h-4" /> Chat</TabsTrigger>
+                            {/* ✅ REARRANGED ORDER: BOARD -> CHAT -> MEET */}
                             <TabsTrigger value="board" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-muted-foreground hover:text-foreground transition-all gap-2"><Layout className="w-4 h-4" /> Task Board</TabsTrigger>
+                            <TabsTrigger value="chat" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-muted-foreground hover:text-foreground transition-all gap-2"><MessageSquare className="w-4 h-4" /> Chat</TabsTrigger>
+                            <TabsTrigger value="meet" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-muted-foreground hover:text-foreground transition-all gap-2"><Video className="w-4 h-4" /> Meet</TabsTrigger>
+                            
                             {role === 'owner' && <TabsTrigger value="requests" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-muted-foreground hover:text-foreground transition-all gap-2"><Users className="w-4 h-4" /> Requests {incomingRequests.length > 0 && <Badge className="ml-1 h-5 px-1.5">{incomingRequests.length}</Badge>}</TabsTrigger>}
                         </TabsList>
+
+                        {/* ✅ TABS CONTENT REORDERED TO MATCH (Optional but cleaner) */}
+                        <TabsContent value="board" className="flex-grow overflow-hidden mt-4 pt-2">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full overflow-hidden">
+                                <KanbanColumn title="To Do" status="todo" color="bg-zinc-500" />
+                                <KanbanColumn title="In Progress" status="in-progress" color="bg-blue-500" />
+                                <KanbanColumn title="Done" status="done" color="bg-green-500" />
+                            </div>
+                        </TabsContent>
 
                         <TabsContent value="chat" className="flex-grow mt-0 overflow-hidden pt-4">
                             <Card className="h-full flex flex-col border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
                                 <CardContent className="flex-grow overflow-hidden p-0 relative">
-                                    {/* Chat Background Pattern */}
                                     <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-foreground to-transparent [background-size:20px_20px] pointer-events-none"></div>
-
                                     <ScrollArea className="h-full px-4 py-6">
                                         <div className="space-y-6 max-w-4xl mx-auto">
                                             {messages.length === 0 && (
@@ -493,38 +504,18 @@ export default function CollaboratePage() {
                                         </div>
                                     </ScrollArea>
                                 </CardContent>
-
-                                {/* INPUT AREA */}
                                 <div className="bg-background/80 backdrop-blur-md border-t p-4">
                                     <div className="max-w-4xl mx-auto flex flex-col gap-2">
                                         {replyingTo && (<div className="flex items-center justify-between px-4 py-2 bg-muted/50 rounded-lg border border-border/50 mb-2 animate-in slide-in-from-bottom-2"><div className="flex items-center gap-3 text-muted-foreground border-l-2 border-primary pl-2"><Reply className="w-3.5 h-3.5" /><div className="flex flex-col"><span className="font-bold text-xs text-foreground">Replying to {replyingTo.sender?.name || 'Unknown'}</span><span className="text-xs truncate max-w-[300px] opacity-80">{replyingTo.content}</span></div></div><Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-background" onClick={() => setReplyingTo(null)}><X className="w-3 h-3" /></Button></div>)}
                                         {editingMessageId && (<div className="flex items-center justify-between px-4 py-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20 mb-2"><span className="text-yellow-600 dark:text-yellow-400 font-medium flex items-center gap-2 text-sm"><Edit2 className="w-3.5 h-3.5" /> Editing message</span><Button variant="ghost" size="icon" className="h-6 w-6" onClick={cancelInput}><X className="w-3 h-3" /></Button></div>)}
-
                                         <div className="flex gap-3 items-end">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild><Button variant="outline" size="icon" className="text-muted-foreground rounded-full h-11 w-11 shrink-0 bg-background hover:bg-muted hover:text-foreground transition-colors"><Plus className="w-5 h-5" /></Button></DropdownMenuTrigger>
                                                 <DropdownMenuContent align="start" className="w-48"><DropdownMenuItem onClick={insertCodeBlock}><Code className="w-4 h-4 mr-2" /> Code Block</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem disabled className="opacity-50"><FileUp className="w-4 h-4 mr-2" /> Upload File</DropdownMenuItem><DropdownMenuItem disabled className="opacity-50"><ImageIcon className="w-4 h-4 mr-2" /> Upload Image</DropdownMenuItem></DropdownMenuContent>
                                             </DropdownMenu>
                                             <div className="relative flex-grow">
-                                                <Textarea
-                                                    ref={textareaRef}
-                                                    placeholder={replyingTo ? "Type a reply..." : "Message your team..."}
-                                                    value={newMessage}
-                                                    onChange={e => setNewMessage(e.target.value)}
-                                                    onKeyDown={e => {
-                                                        if (e.key === 'Enter' && !e.shiftKey) {
-                                                            e.preventDefault();
-                                                            if (!isSendingRef.current) handleSendMessage();
-                                                        }
-                                                    }}
-                                                    className="min-h-[44px] max-h-[150px] rounded-2xl border-border/50 bg-muted/30 focus-visible:ring-1 focus-visible:ring-primary/50 resize-none py-3 px-4 pr-12 shadow-inner"
-                                                />
-                                                <Button
-                                                    onClick={handleSendMessage}
-                                                    size="icon"
-                                                    className={cn("absolute right-1.5 bottom-1.5 rounded-full shrink-0 h-8 w-8 transition-all duration-200", newMessage.trim() ? "bg-primary hover:bg-primary/90" : "bg-muted text-muted-foreground hover:bg-muted/80")}
-                                                    disabled={!newMessage.trim() || isSending}
-                                                >
+                                                <Textarea ref={textareaRef} placeholder={replyingTo ? "Type a reply..." : "Message your team..."} value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!isSendingRef.current) handleSendMessage(); } }} className="min-h-[44px] max-h-[150px] rounded-2xl border-border/50 bg-muted/30 focus-visible:ring-1 focus-visible:ring-primary/50 resize-none py-3 px-4 pr-12 shadow-inner" />
+                                                <Button onClick={handleSendMessage} size="icon" className={cn("absolute right-1.5 bottom-1.5 rounded-full shrink-0 h-8 w-8 transition-all duration-200", newMessage.trim() ? "bg-primary hover:bg-primary/90" : "bg-muted text-muted-foreground hover:bg-muted/80")} disabled={!newMessage.trim() || isSending}>
                                                     {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 ml-0.5" />}
                                                 </Button>
                                             </div>
@@ -534,48 +525,43 @@ export default function CollaboratePage() {
                             </Card>
                         </TabsContent>
 
-                        <TabsContent value="board" className="flex-grow overflow-hidden mt-4 pt-2">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full overflow-hidden">
-                                <KanbanColumn title="To Do" status="todo" color="bg-zinc-500" />
-                                <KanbanColumn title="In Progress" status="in-progress" color="bg-blue-500" />
-                                <KanbanColumn title="Done" status="done" color="bg-green-500" />
-                            </div>
+                        <TabsContent value="meet" className="flex-grow mt-0 overflow-hidden pt-4 h-full">
+                            <Card className="h-full flex flex-col border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+                                <iframe
+                                    allow="camera; microphone; fullscreen; display-capture; autoplay"
+                                    src={`https://meet.jit.si/synergyhub-${project._id}`}
+                                    className="w-full h-full border-0"
+                                    title="Team Meeting"
+                                />
+                            </Card>
                         </TabsContent>
 
                         {role === 'owner' && <TabsContent value="requests" className="mt-4 pt-2">
                             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2"><Users className="w-5 h-5" /> Pending Applications</CardTitle>
-                                    <CardDescription>Review developers who want to join.</CardDescription>
-                                </CardHeader>
+                                <CardHeader><CardTitle className="flex items-center gap-2"><Users className="w-5 h-5" /> Pending Applications</CardTitle><CardDescription>Review developers who want to join.</CardDescription></CardHeader>
                                 <CardContent>
-                                    {incomingRequests.length === 0 ?
-                                        <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-xl"><Users className="w-10 h-10 mx-auto mb-2 opacity-20" /><p>No pending requests.</p></div>
-                                        : (
-                                            <div className="space-y-4">
-                                                {incomingRequests.map(req => (
-                                                    <div key={req._id} className="flex flex-col sm:flex-row justify-between items-center p-4 border border-border/50 rounded-lg bg-card hover:border-primary/30 transition-all gap-4">
-                                                        <div className="flex items-center gap-4 w-full sm:w-auto overflow-hidden">
-                                                            <Link href={`/users/${req.applicant?._id || req.applicant}`} className="flex items-center gap-4 group cursor-pointer min-w-0">
-                                                                <Avatar className="h-12 w-12 border-2 border-background ring-2 ring-primary/10 group-hover:scale-105 transition-transform"><AvatarFallback>{req.applicant.name?.charAt(0)}</AvatarFallback></Avatar>
-                                                                <div className="min-w-0">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <p className="font-semibold text-base truncate group-hover:text-primary transition-colors">{req.applicant.name}</p>
-                                                                        <Badge variant="outline" className="text-[10px] h-5 hidden sm:flex">Applicant</Badge>
-                                                                    </div>
-                                                                    <p className="text-xs text-muted-foreground truncate">{req.applicant.email}</p>
-                                                                    {req.message && <div className="mt-2 text-xs bg-muted/50 p-2 rounded italic line-clamp-2">"{req.message}"</div>}
-                                                                </div>
-                                                            </Link>
-                                                        </div>
-                                                        <div className="flex gap-2 w-full sm:w-auto justify-end">
-                                                            <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10 border-destructive/20" onClick={() => handleDecision(req._id, 'rejected')}>Reject</Button>
-                                                            <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => handleDecision(req._id, 'accepted')}>Accept</Button>
-                                                        </div>
+                                    {incomingRequests.length === 0 ? <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-xl"><Users className="w-10 h-10 mx-auto mb-2 opacity-20" /><p>No pending requests.</p></div> : (
+                                        <div className="space-y-4">
+                                            {incomingRequests.map(req => (
+                                                <div key={req._id} className="flex flex-col sm:flex-row justify-between items-center p-4 border border-border/50 rounded-lg bg-card hover:border-primary/30 transition-all gap-4">
+                                                    <div className="flex items-center gap-4 w-full sm:w-auto overflow-hidden">
+                                                        <Link href={`/users/${req.applicant?._id || req.applicant}`} className="flex items-center gap-4 group cursor-pointer min-w-0">
+                                                            <Avatar className="h-12 w-12 border-2 border-background ring-2 ring-primary/10 group-hover:scale-105 transition-transform"><AvatarFallback>{req.applicant.name?.charAt(0)}</AvatarFallback></Avatar>
+                                                            <div className="min-w-0">
+                                                                <div className="flex items-center gap-2"><p className="font-semibold text-base truncate group-hover:text-primary transition-colors">{req.applicant.name}</p><Badge variant="outline" className="text-[10px] h-5 hidden sm:flex">Applicant</Badge></div>
+                                                                <p className="text-xs text-muted-foreground truncate">{req.applicant.email}</p>
+                                                                {req.message && <div className="mt-2 text-xs bg-muted/50 p-2 rounded italic line-clamp-2">"{req.message}"</div>}
+                                                            </div>
+                                                        </Link>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                                    <div className="flex gap-2 w-full sm:w-auto justify-end">
+                                                        <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10 border-destructive/20" onClick={() => handleDecision(req._id, 'rejected')}>Reject</Button>
+                                                        <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => handleDecision(req._id, 'accepted')}>Accept</Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </TabsContent>}
@@ -594,26 +580,14 @@ export default function CollaboratePage() {
                         <div className="space-y-6">
                             <div className="space-y-3">
                                 <Label htmlFor="task-title" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Title</Label>
-                                <Input
-                                    id="task-title"
-                                    className="text-lg font-medium border-border/50 bg-muted/30 h-12"
-                                    value={activeTask.title}
-                                    onChange={(e) => handleUpdateTask(activeTask._id, { title: e.target.value })}
-                                />
+                                <Input id="task-title" className="text-lg font-medium border-border/50 bg-muted/30 h-12" value={activeTask.title} onChange={(e) => handleUpdateTask(activeTask._id, { title: e.target.value })} />
                             </div>
-
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Status</Label>
                                     <div className="relative">
-                                        <select
-                                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
-                                            value={activeTask.status}
-                                            onChange={(e) => handleUpdateTask(activeTask._id, { status: e.target.value })}
-                                        >
-                                            <option value="todo">To Do</option>
-                                            <option value="in-progress">In Progress</option>
-                                            <option value="done">Done</option>
+                                        <select className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none" value={activeTask.status} onChange={(e) => handleUpdateTask(activeTask._id, { status: e.target.value })}>
+                                            <option value="todo">To Do</option><option value="in-progress">In Progress</option><option value="done">Done</option>
                                         </select>
                                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
                                     </div>
@@ -621,32 +595,19 @@ export default function CollaboratePage() {
                                 <div className="space-y-2">
                                     <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Priority</Label>
                                     <div className="relative">
-                                        <select
-                                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
-                                            value={activeTask.priority || 'medium'}
-                                            onChange={(e) => handleUpdateTask(activeTask._id, { priority: e.target.value })}
-                                        >
-                                            <option value="low">Low</option>
-                                            <option value="medium">Medium</option>
-                                            <option value="high">High</option>
+                                        <select className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none" value={activeTask.priority || 'medium'} onChange={(e) => handleUpdateTask(activeTask._id, { priority: e.target.value })}>
+                                            <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
                                         </select>
                                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
                                     </div>
                                 </div>
                             </div>
-
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Assignee</Label>
                                     <div className="relative">
-                                        <select
-                                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
-                                            value={activeTask.assignedTo?._id || "unassigned"}
-                                            onChange={(e) => handleUpdateTask(activeTask._id, { assignedTo: e.target.value })}
-                                        >
-                                            <option value="unassigned">Unassigned</option>
-                                            <option value={project.owner?._id}>{project.owner?.name} (Owner)</option>
-                                            {project.team?.map((m: any) => (<option key={m.user?._id} value={m.user?._id}>{m.user?.name}</option>))}
+                                        <select className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none" value={activeTask.assignedTo?._id || "unassigned"} onChange={(e) => handleUpdateTask(activeTask._id, { assignedTo: e.target.value })}>
+                                            <option value="unassigned">Unassigned</option><option value={project.owner?._id}>{project.owner?.name} (Owner)</option>{project.team?.map((m: any) => (<option key={m.user?._id} value={m.user?._id}>{m.user?.name}</option>))}
                                         </select>
                                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
                                     </div>
@@ -656,30 +617,14 @@ export default function CollaboratePage() {
                                     <Input type="date" value={activeTask.dueDate ? new Date(activeTask.dueDate).toISOString().split('T')[0] : ''} onChange={(e) => handleUpdateTask(activeTask._id, { dueDate: e.target.value })} />
                                 </div>
                             </div>
-
                             <div className="space-y-2">
                                 <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Color Label</Label>
-                                <div className="flex gap-2">
-                                    {['blue', 'red', 'green', 'yellow', 'purple'].map(c => (
-                                        <button
-                                            key={c}
-                                            className={cn("w-6 h-6 rounded-full border-2 transition-all", activeTask.color === c ? "border-foreground scale-110" : "border-transparent opacity-50 hover:opacity-100", `bg-${c}-500`)}
-                                            onClick={() => handleUpdateTask(activeTask._id, { color: c })}
-                                        />
-                                    ))}
-                                </div>
+                                <div className="flex gap-2">{['blue', 'red', 'green', 'yellow', 'purple'].map(c => (<button key={c} className={cn("w-6 h-6 rounded-full border-2 transition-all", activeTask.color === c ? "border-foreground scale-110" : "border-transparent opacity-50 hover:opacity-100", `bg-${c}-500`)} onClick={() => handleUpdateTask(activeTask._id, { color: c })} />))}</div>
                             </div>
-
                             <div className="space-y-2">
                                 <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Description</Label>
-                                <Textarea
-                                    placeholder="Add more details about this task..."
-                                    className="min-h-[150px] resize-none focus-visible:ring-1 bg-muted/30"
-                                    value={activeTask.description || ""}
-                                    onChange={(e) => handleUpdateTask(activeTask._id, { description: e.target.value })}
-                                />
+                                <Textarea placeholder="Add more details about this task..." className="min-h-[150px] resize-none focus-visible:ring-1 bg-muted/30" value={activeTask.description || ""} onChange={(e) => handleUpdateTask(activeTask._id, { description: e.target.value })} />
                             </div>
-
                             <div className="flex justify-between pt-6 border-t border-border/50">
                                 <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteTask(activeTask._id)}><Trash2 className="w-4 h-4 mr-2" /> Delete Task</Button>
                                 <Button onClick={() => setIsSheetOpen(false)}>Save & Close</Button>

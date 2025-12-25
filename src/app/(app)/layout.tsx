@@ -251,13 +251,13 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
 
       <SidebarInset className="bg-transparent">
         <header className="flex h-16 items-center gap-4 border-b border-border/50 dark:border-white/5 bg-background/40 backdrop-blur-md px-4 md:px-6 sticky top-0 z-30 transition-all">
-          <div className="flex-1" />
-
+          
+          {/* ✅ MOVED BACK BUTTON HERE (LEFT SIDE) */}
           {showBackButton && (
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1 pl-2 text-muted-foreground hover:text-foreground"
+              className="gap-1 pl-2 text-muted-foreground hover:text-foreground mr-2"
               onClick={() => router.back()}
             >
               <ArrowLeft className="h-4 w-4" />
@@ -265,8 +265,11 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
             </Button>
           )}
 
+          {/* Spacer to push other content to the right */}
+          <div className="flex-1" />
+
           <div className="flex items-center gap-3">
-            {/* ✅ FIX: Render ModeToggle and NotificationBell only on Client to prevent Hydration ID Mismatch */}
+            {/* Render ModeToggle and NotificationBell only on Client to prevent Hydration ID Mismatch */}
             {isMounted ? (
               <>
                 <ModeToggle />
