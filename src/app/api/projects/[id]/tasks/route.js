@@ -9,9 +9,12 @@ export async function GET(req, { params }) {
   try {
     await connectDB();
     const { id } = await params;
+    
+    // ✅ OPTIMIZED: Use .lean() for faster JSON serialization
     const tasks = await Task.find({ project: id })
         .populate("assignedTo", "name email") 
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .lean();
         
     return NextResponse.json({ tasks }, { status: 200 });
   } catch (error) {
@@ -19,6 +22,7 @@ export async function GET(req, { params }) {
   }
 }
 
+// POST, PUT, DELETE remain same...
 export async function POST(req, { params }) {
   try {
     await connectDB();
@@ -32,7 +36,7 @@ export async function POST(req, { params }) {
       status: status || 'todo',
       priority: priority || 'medium',
       dueDate: dueDate || null,
-      color: color || "blue", // Default color
+      color: color || "blue",
       assignedTo: assignedTo || null,
       createdBy
     });
@@ -50,7 +54,6 @@ export async function PUT(req, { params }) {
         await connectDB();
         const { taskId, ...updates } = await req.json();
         
-        // Ensure assignedTo is set to null if passed as such (for unassigning)
         if (updates.assignedTo === "unassigned") {
             updates.assignedTo = null;
         }
@@ -67,7 +70,6 @@ export async function PUT(req, { params }) {
     }
 }
 
-// ✅ NEW: DELETE Method
 export async function DELETE(req, { params }) {
     try {
         await connectDB();

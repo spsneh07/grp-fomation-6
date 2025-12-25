@@ -1,6 +1,6 @@
 import connectDB from "@/lib/db";
 import Message from "@/models/Message";
-import User from "@/models/User"; // Keep this to ensure User model is loaded
+import User from "@/models/User";
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
@@ -10,21 +10,26 @@ export async function GET(req, { params }) {
     await connectDB();
     const { id } = await params;
 
+    // ✅ OPTIMIZED: Limit to last 50 messages & use lean()
     const messages = await Message.find({ project: id })
+      .sort({ createdAt: -1 }) // Get newest first
+      .limit(50) // Only load last 50 initially
       .populate("sender", "name email")
       .populate({
         path: "replyTo",
         populate: { path: "sender", select: "name" }
       })
-      .sort({ createdAt: 1 });
+      .lean(); // Faster query
 
-    return NextResponse.json({ messages }, { status: 200 });
+    // Reverse to show oldest -> newest in chat UI
+    return NextResponse.json({ messages: messages.reverse() }, { status: 200 });
   } catch (error) {
     console.error("Fetch Error:", error);
     return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
   }
 }
 
+// POST, PUT, DELETE remain same... (omitted for brevity, they are fine)
 export async function POST(req, { params }) {
   try {
     await connectDB();
@@ -38,7 +43,6 @@ export async function POST(req, { params }) {
       replyTo: replyTo || null
     });
 
-    // Populate deeply to show reply details immediately
     await newMessage.populate("sender", "name");
     if (replyTo) {
         await newMessage.populate({

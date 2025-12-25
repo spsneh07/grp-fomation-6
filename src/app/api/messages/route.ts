@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import DirectMessage from "@/models/DirectMessage";
-import User from "@/models/User";
+import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-// GET: Fetch list of users I have chatted with (Conversations)
 export async function GET(req: Request) {
     try {
         await connectDB();
@@ -16,46 +15,62 @@ export async function GET(req: Request) {
         }
 
         // @ts-ignore
-        const userId = session.user.id || session.user._id;
+        const userId = new mongoose.Types.ObjectId(session.user.id || session.user._id);
 
-        // Aggregate to find unique interlocutors
-        // This is a bit complex in pure Mongoose without a Conversation model, but doable.
-        // Or we can just find all unique sender/recipient IDs where current user is involved.
+        // ✅ OPTIMIZED: Use Aggregation to get only the last message per conversation
+        const conversations = await DirectMessage.aggregate([
+            {
+                $match: {
+                    $or: [{ sender: userId }, { recipient: userId }]
+                }
+            },
+            {
+                $sort: { createdAt: -1 } // Sort by newest first
+            },
+            {
+                $group: {
+                    _id: {
+                        $cond: { if: { $eq: ["$sender", userId] }, then: "$recipient", else: "$sender" }
+                    },
+                    lastMessageDoc: { $first: "$$ROOT" } // Keep only the latest message
+                }
+            },
+            {
+                $lookup: {
+                    from: "users", // Assumes your collection name is 'users'
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "userDetails"
+                }
+            },
+            {
+                $unwind: "$userDetails"
+            },
+            {
+                $project: {
+                    _id: "$userDetails._id",
+                    name: "$userDetails.name",
+                    email: "$userDetails.email",
+                    image: "$userDetails.image",
+                    jobTitle: "$userDetails.jobTitle",
+                    lastMessage: "$lastMessageDoc.content",
+                    lastMessageTime: "$lastMessageDoc.createdAt",
+                    // If I sent it, it's read. If I received it, check isRead status.
+                    isRead: {
+                        $cond: { 
+                            if: { $eq: ["$lastMessageDoc.sender", userId] }, 
+                            then: true, 
+                            else: "$lastMessageDoc.isRead" 
+                        }
+                    }
+                }
+            },
+            {
+                $sort: { lastMessageTime: -1 }
+            }
+        ]);
 
-        const messages = await DirectMessage.find({
-            $or: [{ sender: userId }, { recipient: userId }]
-        }).sort({ createdAt: -1 });
-
-        const conversationUserIds = new Set<string>();
-        messages.forEach(msg => {
-            if (msg.sender.toString() !== userId) conversationUserIds.add(msg.sender.toString());
-            if (msg.recipient.toString() !== userId) conversationUserIds.add(msg.recipient.toString());
-        });
-
-        // Fetch user details
-        const conversations = await User.find({ _id: { $in: Array.from(conversationUserIds) } })
-            .select("name email image jobTitle");
-
-        // Add last message info (optional but good for UI)
-        const conversationsWithLastMessage = await Promise.all(conversations.map(async (user) => {
-            const lastMsg = messages.find(m =>
-                (m.sender.toString() === userId && m.recipient.toString() === user._id.toString()) ||
-                (m.sender.toString() === user._id.toString() && m.recipient.toString() === userId)
-            );
-            return {
-                ...user.toObject(),
-                lastMessage: lastMsg ? lastMsg.content : "",
-                lastMessageTime: lastMsg ? lastMsg.createdAt : null,
-                isRead: lastMsg?.sender.toString() === userId ? true : lastMsg?.isRead // if I sent it, it's "read" by me
-            };
-        }));
-
-        // Sort by last message time
-        conversationsWithLastMessage.sort((a, b) => {
-            return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
-        });
-
-        return NextResponse.json({ conversations: conversationsWithLastMessage });
+        return NextResponse.json({ conversations });
 
     } catch (error) {
         console.error("Fetch Conversations Error:", error);
@@ -63,7 +78,7 @@ export async function GET(req: Request) {
     }
 }
 
-// POST: Send a new message
+// POST remains the same...
 export async function POST(req: Request) {
     try {
         await connectDB();
