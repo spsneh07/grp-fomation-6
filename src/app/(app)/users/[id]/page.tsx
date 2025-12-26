@@ -138,10 +138,6 @@ export default function UserProfilePage() {
 
     return (
         <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
-            {/* Back Button */}
-            <Button variant="ghost" onClick={() => router.back()} className="mb-4 pl-0 hover:bg-transparent hover:text-primary transition-colors">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back
-            </Button>
 
             {/* Hero Section */}
             <div className="relative rounded-2xl overflow-hidden border border-border/40 bg-zinc-50/50 dark:bg-zinc-950/50 backdrop-blur-xl shadow-lg">

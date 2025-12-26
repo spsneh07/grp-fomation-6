@@ -18,7 +18,7 @@ import {
     Plus, MoreVertical, Flag, User as UserIcon,
     Trash2, Calendar as CalendarIcon, Tag, CheckCheck,
     Reply, Edit2, X, Code, FileUp, Image as ImageIcon, Github, Sparkles, ChevronDown,
-    Video
+    Video, Info // ✅ Imported Info icon
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from "sonner";
@@ -73,6 +73,7 @@ export default function CollaboratePage() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [isOverviewOpen, setIsOverviewOpen] = useState(false); // ✅ Overview Sheet State
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
 
     useEffect(() => {
@@ -358,7 +359,22 @@ export default function CollaboratePage() {
             {/* HEADER */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/40 pb-6 shrink-0">
                 <div>
-                    <h1 className="font-headline text-3xl font-bold tracking-tight mb-1">{project.title}</h1>
+                    {/* ✅ CLICKABLE PROJECT TITLE (Only active for Members) */}
+                    {isAccessGranted ? (
+                        <div 
+                            className="flex items-center gap-3 cursor-pointer group w-fit"
+                            onClick={() => setIsOverviewOpen(true)}
+                            title="Click to view project details"
+                        >
+                            <h1 className="font-headline text-3xl font-bold tracking-tight mb-1 group-hover:text-primary transition-colors">
+                                {project.title}
+                            </h1>
+                            <Info className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity translate-y-0.5" />
+                        </div>
+                    ) : (
+                        <h1 className="font-headline text-3xl font-bold tracking-tight mb-1">{project.title}</h1>
+                    )}
+
                     <div className="flex items-center gap-2 text-muted-foreground text-sm">
                         <span className={cn("w-2 h-2 rounded-full", isAccessGranted ? "bg-green-500" : "bg-zinc-500")}></span>
                         {isAccessGranted ? "Workspace Active" : "Public Overview"}
@@ -373,7 +389,7 @@ export default function CollaboratePage() {
             </div>
 
             {!isAccessGranted ? (
-                // === PUBLIC VIEW ===
+                // === PUBLIC VIEW (Non-Members) ===
                 <div className="grid gap-8 lg:grid-cols-3 max-w-6xl mx-auto w-full flex-grow overflow-auto py-4">
                     <div className="lg:col-span-2 space-y-8">
                         <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-sm">
@@ -440,12 +456,11 @@ export default function CollaboratePage() {
                 </div>
             ) : (
 
-                // === WORKSPACE VIEW ===
+                // === WORKSPACE VIEW (Members) ===
                 <div className="flex-grow flex flex-col overflow-hidden w-full max-w-[1600px] mx-auto">
-                    {/* ✅ UPDATED TABS DEFAULT VALUE */}
+                    {/* ✅ REMOVED OVERVIEW TAB, REVERTED TO 3 TABS */}
                     <Tabs defaultValue="board" className="h-full flex flex-col">
                         <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent space-x-6">
-                            {/* ✅ REARRANGED ORDER: BOARD -> CHAT -> MEET */}
                             <TabsTrigger value="board" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-muted-foreground hover:text-foreground transition-all gap-2"><Layout className="w-4 h-4" /> Task Board</TabsTrigger>
                             <TabsTrigger value="chat" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-muted-foreground hover:text-foreground transition-all gap-2"><MessageSquare className="w-4 h-4" /> Chat</TabsTrigger>
                             <TabsTrigger value="meet" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-muted-foreground hover:text-foreground transition-all gap-2"><Video className="w-4 h-4" /> Meet</TabsTrigger>
@@ -453,7 +468,6 @@ export default function CollaboratePage() {
                             {role === 'owner' && <TabsTrigger value="requests" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3 text-muted-foreground hover:text-foreground transition-all gap-2"><Users className="w-4 h-4" /> Requests {incomingRequests.length > 0 && <Badge className="ml-1 h-5 px-1.5">{incomingRequests.length}</Badge>}</TabsTrigger>}
                         </TabsList>
 
-                        {/* ✅ TABS CONTENT REORDERED TO MATCH (Optional but cleaner) */}
                         <TabsContent value="board" className="flex-grow overflow-hidden mt-4 pt-2">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full overflow-hidden">
                                 <KanbanColumn title="To Do" status="todo" color="bg-zinc-500" />
@@ -631,6 +645,110 @@ export default function CollaboratePage() {
                             </div>
                         </div>
                     )}
+                </SheetContent>
+            </Sheet>
+
+            {/* ✅ NEW: PROJECT OVERVIEW SHEET */}
+            <Sheet open={isOverviewOpen} onOpenChange={setIsOverviewOpen}>
+                <SheetContent side="right" className="sm:max-w-[600px] overflow-y-auto border-l-border/50 backdrop-blur-xl bg-background/95 p-0">
+                    {/* Header with Background */}
+                    <div className="relative h-40 bg-gradient-to-br from-primary/20 via-background to-background border-b border-border/50 flex flex-col justify-end p-6">
+                        <SheetHeader className="relative z-10 text-left">
+                            <SheetTitle className="text-3xl font-bold font-headline">{project.title}</SheetTitle>
+                            <SheetDescription className="text-foreground/80">Project Details & Team</SheetDescription>
+                        </SheetHeader>
+                        {/* Decorative Blob */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                    </div>
+
+                    <div className="p-6 space-y-8">
+                        {/* Description */}
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                <Info className="w-4 h-4" /> Description
+                            </h3>
+                            <p className="leading-relaxed text-foreground/90 whitespace-pre-line text-sm">
+                                {project.description}
+                            </p>
+                        </div>
+
+                        {/* Tech Stack */}
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                <Code className="w-4 h-4" /> Tech Stack
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                                {project.techStack?.map((t: string, i: number) => (
+                                    <Badge key={i} variant="secondary" className="px-3 py-1 bg-secondary/50 border border-border/50">
+                                        {t}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Links */}
+                        {project.githubLink && (
+                            <div className="space-y-3">
+                                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                    <Github className="w-4 h-4" /> Repository
+                                </h3>
+                                <Button variant="outline" className="w-full justify-start gap-2 h-12 border-border/60 hover:bg-muted/50" asChild>
+                                    <Link href={project.githubLink} target="_blank">
+                                        <Github className="h-5 w-5" />
+                                        <div className="flex flex-col items-start text-xs">
+                                            <span className="font-semibold text-sm">View on GitHub</span>
+                                            <span className="text-muted-foreground font-normal truncate max-w-[300px]">{project.githubLink}</span>
+                                        </div>
+                                    </Link>
+                                </Button>
+                            </div>
+                        )}
+
+                        {/* Team Members */}
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                <Users className="w-4 h-4" /> Team Members
+                            </h3>
+                            <div className="space-y-3">
+                                {/* Owner */}
+                                <Link href={`/users/${project.owner?._id || project.owner}`} className="block">
+                                    <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors group">
+                                        <Avatar className="w-10 h-10 border-2 border-background ring-2 ring-primary/20">
+                                            <AvatarFallback className="bg-primary/20 text-primary font-bold">
+                                                {project.owner?.name?.charAt(0) || "O"}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-grow min-w-0">
+                                            <p className="font-semibold text-sm truncate">{project.owner?.name || "Owner"}</p>
+                                            <p className="text-xs text-muted-foreground truncate">{project.owner?.email}</p>
+                                        </div>
+                                        <Badge className="bg-primary text-primary-foreground pointer-events-none">Owner</Badge>
+                                    </div>
+                                </Link>
+
+                                {/* Members */}
+                                {project.team?.map((member: any, index: number) => {
+                                    const userData = member.user || member;
+                                    if (!userData) return null;
+                                    return (
+                                        <Link href={`/users/${userData._id}`} key={index} className="block">
+                                            <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50 hover:bg-muted/50 transition-colors group">
+                                                <Avatar className="w-10 h-10 border border-border">
+                                                    <AvatarImage src={userData.avatarUrl} />
+                                                    <AvatarFallback>{userData.name?.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-grow min-w-0">
+                                                    <p className="font-semibold text-sm truncate">{userData.name}</p>
+                                                    <p className="text-xs text-muted-foreground truncate">{userData.email || "Member"}</p>
+                                                </div>
+                                                <Badge variant="outline" className="text-muted-foreground bg-transparent pointer-events-none">Member</Badge>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
                 </SheetContent>
             </Sheet>
         </div>
