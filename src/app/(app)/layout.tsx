@@ -109,7 +109,7 @@ function AppLayoutMain({ children }: { children: React.ReactNode }) {
     { href: '/network', label: 'My Network', icon: Users },
   ];
 
-  const rootPages = ['/dashboard', '/projects', '/settings', '/profile', '/search'];
+  const rootPages = ['/dashboard', '/projects', '/settings', '/profile', '/search', '/network'];
   const showBackButton = !rootPages.includes(pathname);
 
   // Prevent hydration mismatch for the Back button
